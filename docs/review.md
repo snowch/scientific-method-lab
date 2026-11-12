@@ -101,3 +101,12 @@ A separate focused browser check passed for keyboard navigation to the skip
 link, indentation in the editor, leaving the editor with Shift+Tab, Ctrl+Enter
 execution and Stop. Screenshots cover desktop, phone, editor and dark-theme
 states. Test artifacts are retained by the GitHub Actions workflow.
+
+## Publication environment correction
+
+The first GitHub Actions run (43331260068) installed Python requirements but
+failed before course checks: `ubuntu-latest` selected Ubuntu 26.04, which the
+pinned Playwright release does not support. The browser installer explicitly
+reported that unsupported OS. Both workflow jobs now use Ubuntu 24.04. Course
+source and the locally passing checks were unchanged. Deployment is retried by
+the corrective push, preserving the failed run's evidence.

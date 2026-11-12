@@ -67,7 +67,7 @@ will differ materially across machines.
 
 ## Publishing
 
-`.github/workflows/pages.yml` runs the same checks for pull requests and pushes.
+`.github/workflows/pages.yml` runs the same checks on Ubuntu 24.04 for pull requests and pushes.
 On a successful push to `main`, it uploads `dist/` and deploys with GitHub Pages
 Actions. Pages must use **GitHub Actions** as its source, as already configured.
 No API keys, servers or paid services are required.
