@@ -1,0 +1,12 @@
+{
+  "name": "scientific-method-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && python3 -m http.server 5173 --directory .preview",
+    "check": "python3 tests/test_examples.py && npm run build && node tests/links.mjs && python3 tests/browser.py"
+  },
+  "dependencies": {"pyodide": "0.27.7"}
+}

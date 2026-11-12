@@ -1,0 +1,10 @@
+Scientific Method Lab
+Copyright © 2026 Christopher Snow
+
+Original course prose, exercises and illustrations: Creative Commons
+Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
+https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Source code: Apache License 2.0; see LICENSE-CODE.
+Third-party packages retain their respective licences, included in the
+self-hosted runtime and package wheels. Font licences are in src/fonts/.
