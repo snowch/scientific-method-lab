@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow
+import {attachEditor} from './editor.mjs';
 const root=new URL('.',import.meta.url);
 const $=id=>document.getElementById(id);
 const prefix='sml:v1:';
@@ -30,6 +31,21 @@ $('theme')?.addEventListener('click',()=>{
 });
 function setThemeLabel(){const dark=document.documentElement.dataset.theme==='dark';$('theme')?.setAttribute('aria-label',`Switch to ${dark?'light':'dark'} theme`)}
 setThemeLabel();
+const demo=$('evidence-demo');
+if(demo){
+ for(const mode of ['runs','means'])$('demo-'+mode).addEventListener('click',()=>{
+  demo.dataset.view=mode;
+  for(const option of ['runs','means'])$('demo-'+option).setAttribute('aria-pressed',String(option===mode));
+  $('demo-caption').textContent=mode==='means'?'Both means are 50 ms. The individual waits are hidden.':'Each dot is one run. One long wait disappears inside the average.';
+ });
+}
+const menu=$('course-menu-toggle'),sidebar=$('course-sidebar');
+if(menu&&sidebar){
+ const close=()=>{sidebar.classList.remove('is-open');menu.setAttribute('aria-expanded','false')};
+ menu.addEventListener('click',()=>{const open=sidebar.classList.toggle('is-open');menu.setAttribute('aria-expanded',String(open))});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&sidebar.classList.contains('is-open')){close();menu.focus()}});
+ matchMedia('(min-width: 961px)').addEventListener('change',event=>{if(event.matches)close()});
+}
 const course=await fetch(new URL('course.json',root)).then(response=>{if(!response.ok)throw new Error('Course data could not load. Please reload.');return response.json()}).catch(error=>{
  const target=$('status')||$('progress-status');if(target)target.textContent=error.message;return null;
 });
@@ -49,7 +65,7 @@ function initializeOverview({lessons}){
    $('progress-title').textContent=read===lessons.length?'A course read. More questions ahead.':'Your investigation continues.';
    $('progress-text').textContent='Reading marks record progress, not mastery. Your drafts stay on this browser.';
    const next=lessons.find(l=>get('read:'+l.slug)!=='true');
-   if(next){$('start-course').href='lessons/'+next.slug+'.html';$('start-course').innerHTML='Continue investigating <span>↗</span>'}
+   if(next){$('start-course').href='lessons/'+next.slug+'.html';$('start-label').textContent='Continue learning'}
   }
   updateReadMarks();
  }
@@ -95,6 +111,7 @@ function initializeLesson(lesson){
  const initialQuiz=get(`draft:${slug}:quiz`);
  const draftKey=id=>`draft:${slug}:${id}`;
  $('code').value=get(draftKey('code'),initialCode);
+ const refreshEditor=attachEditor($('code'));
  document.querySelectorAll('[data-save]').forEach(el=>{
   el.value=get(draftKey(el.dataset.save));
   el.addEventListener('input',()=>put(draftKey(el.dataset.save),el.value));
@@ -113,7 +130,7 @@ function initializeLesson(lesson){
   if(event.key==='Tab'&&!event.shiftKey){event.preventDefault();const start=event.target.selectionStart,end=event.target.selectionEnd;event.target.setRangeText('    ',start,end,'end');event.target.dispatchEvent(new Event('input'))}
   if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();if(!busy)run()}
  });
- $('restore').addEventListener('click',()=>{$('code').value=initialCode;put(draftKey('code'),initialCode);stale();$('status').textContent='Published example restored. Run to get fresh output.'});
+ $('restore').addEventListener('click',()=>{$('code').value=initialCode;refreshEditor();put(draftKey('code'),initialCode);stale();$('status').textContent='Published example restored. Run to get fresh output.'});
  $('download-code').addEventListener('click',()=>download(slug+'.py',$('code').value,'text/x-python'));
  $('export-run').addEventListener('click',()=>{
   if(!lastRun)return;
@@ -121,7 +138,7 @@ function initializeLesson(lesson){
   download(slug+'-run.json',JSON.stringify({...lastRun,notes},null,2));
  });
  function controls(running){
-  busy=running;$('run').disabled=running;$('stop').disabled=!running;$('restore').disabled=running;
+  busy=running;document.querySelector('.experiment').classList.toggle('is-running',running);$('code-editor').setAttribute('aria-busy',String(running));$('run').disabled=running;$('stop').disabled=!running;$('restore').disabled=running;
   if($('csv-upload'))$('csv-upload').disabled=running;
   if($('clear-csv'))$('clear-csv').disabled=running||csv===null;
  }

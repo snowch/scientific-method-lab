@@ -37,21 +37,35 @@ try:
         page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         visit(page,BASE)
         assert page.locator('.lesson-row').count()==30
-        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(251, 250, 246)'
+        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(247, 249, 252)'
         assert 'DM Sans' in page.evaluate('getComputedStyle(document.documentElement).fontFamily')
+        assert 'Sora' in page.locator('h1').evaluate('(el)=>getComputedStyle(el).fontFamily')
+        page.locator('#demo-means').click()
+        assert page.locator('#evidence-demo').get_attribute('data-view')=='means'
+        assert page.locator('#demo-means').get_attribute('aria-pressed')=='true'
+        assert '50 ms' in page.locator('#demo-caption').inner_text()
+        page.locator('#demo-runs').click()
+        assert page.locator('#demo-runs').get_attribute('aria-pressed')=='true'
         page.screenshot(path=str(RESULTS/'overview-desktop.png'),full_page=True)
         page.locator('#search').fill('confidence')
         assert 0<page.locator('.lesson-row:visible').count()<30
         page.locator('#search').fill('no-such-topic-zzzz')
         assert page.locator('#search-empty').is_visible()
         page.locator('#search').fill('')
+        page.evaluate("localStorage.setItem('sml:v1:read:make-a-claim-testable','true')")
+        visit(page,BASE)
+        assert page.locator('#start-label').inner_text()=='Continue learning'
+        assert page.locator('#start-course').get_attribute('href')=='lessons/'+LESSONS[1]['slug']+'.html'
         # Execute all published sources in one worker. Each run has a fresh
         # namespace; this also checks isolation without paying 30 import costs.
         # Every actual page is checked independently below at narrow widths.
         visit(page,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
+        assert page.locator('#code-editor').evaluate("el=>el.classList.contains('is-highlighted')")
+        assert page.locator('#code-highlight .token-keyword').count()>0
         for i,lesson in enumerate(LESSONS):
             source=(ROOT/'python'/lesson['code']).read_text()
             page.locator('#code').fill(source)
+            assert page.locator('#code-highlight code').text_content()==source+'\n'
             page.locator('#run').click();wait_result(page)
             actual=page.locator('#output').inner_text()
             assert len(actual)>10
@@ -107,7 +121,9 @@ try:
         page.locator('#code').fill('while True: pass')
         page.locator('#run').click();page.wait_for_function("document.querySelector('#status').textContent==='Running your Python…'",timeout=30000)
         page.locator('#stop').click();assert 'Stopped' in page.locator('#status').inner_text()
-        page.locator('#restore').click();page.locator('#run').click();wait_result(page)
+        page.locator('#restore').click()
+        assert page.locator('#code-highlight code').text_content()==page.locator('#code').input_value()+'\n'
+        page.locator('#run').click();wait_result(page)
         # Feedback needs an attempt and respects wrong/correct answers.
         page.locator('#quiz button').click();assert 'Choose an answer' in page.locator('#quiz-feedback').inner_text()
         page.locator('input[name=answer][value="1"]').check();page.locator('#quiz button').click()
@@ -119,15 +135,17 @@ try:
         page.locator('#code').fill(page.locator('#code').input_value()+'\n# saved draft')
         download(page,'#download-code',RESULTS/'downloaded.py')
         assert '# saved draft' in (RESULTS/'downloaded.py').read_text()
-        page.reload()
+        page.reload();page.wait_for_selector('html[data-ready=true]')
         assert page.locator('#notes').input_value()=='A note to preserve'
         assert page.locator('#prediction').input_value()=='My saved prediction'
         assert '# saved draft' in page.locator('#code').input_value()
         assert page.locator('#mark-read').is_checked()
+        page.locator('#code').evaluate('el=>{el.scrollTop=70;el.scrollLeft=30;el.dispatchEvent(new Event("scroll"))}')
+        assert page.locator('#code').evaluate('el=>el.scrollLeft')==page.locator('#code-highlight').evaluate('el=>el.scrollLeft')
         # Theme persists, mobile has no page-wide overflow, all reading routes work.
         page.locator('#theme').click();assert page.locator('html').get_attribute('data-theme')=='dark'
         page.reload();assert page.locator('html').get_attribute('data-theme')=='dark'
-        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(20, 36, 31)'
+        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(13, 20, 34)'
         page.screenshot(path=str(RESULTS/'lesson-dark.png'),full_page=True)
         for width in [390,320]:
             page.set_viewport_size({'width':width,'height':844})
@@ -142,16 +160,25 @@ try:
         page.set_viewport_size({'width':390,'height':844})
         page.locator('#theme').click()
         visit(page,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
+        page.locator('#course-menu-toggle').click()
+        assert page.locator('#course-menu-toggle').get_attribute('aria-expanded')=='true'
+        assert page.locator('#course-sidebar').is_visible()
+        page.keyboard.press('Escape')
+        assert page.locator('#course-menu-toggle').get_attribute('aria-expanded')=='false'
+        assert not page.locator('#course-sidebar').is_visible()
+        assert page.evaluate('document.activeElement.id')=='course-menu-toggle'
         page.screenshot(path=str(RESULTS/'lesson-mobile.png'),full_page=True)
         visit(page,BASE+'field-notes.html')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         # Portable progress can restore notes in a genuinely fresh browser context.
         visit(page,BASE)
+        page.locator('.portable-progress summary').click()
         download(page,'#export-progress',RESULTS/'progress.json')
         assert page.locator('#progress-count').inner_text()=='30 / 30 read'
         fresh=browser.new_context(viewport={'width':1440,'height':1000})
         second=fresh.new_page();visit(second,BASE)
         assert second.locator('#progress-count').inner_text()=='0 / 30 read'
+        second.locator('.portable-progress summary').click()
         second.locator('#import-progress').set_input_files(str(RESULTS/'progress.json'))
         second.wait_for_function("document.querySelector('#progress-status').textContent.startsWith('Imported')")
         assert second.locator('#progress-count').inner_text()=='30 / 30 read'

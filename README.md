@@ -76,10 +76,13 @@ No API keys, servers or paid services are required.
 
 - `src/course.json`: objectives, prose, questions, hints and primary sources.
 - `python/`: standalone executable learner examples.
-- `scripts/build.mjs`: static pages and course structure.
+- `scripts/build.mjs`: static generation, executed worked examples and versioned assets.
+- `scripts/layout.mjs`: shared navigation, course overview and lesson layouts.
 - `src/app.js`, `src/worker.js`: local interaction and Python execution.
+- `src/editor.mjs`: syntax colour and line numbers around a native editing surface.
 - `src/style.css`, `src/fonts/`: responsive visual system and self-hosted fonts.
 - [Learning design brief](docs/learning-design.md).
+- [Visual design brief](docs/visual-redesign.md).
 - [Review and evidence](docs/review.md).
 
 The design applies the repository's [learning-design skill](.agents/skills/learning-design/SKILL.md)
