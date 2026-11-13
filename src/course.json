@@ -40,7 +40,7 @@
       "explain": [
         "A team says its new cache is faster. Faster at which job, on which machine, and compared with what? Without those boundaries, almost any result can be made to fit the claim.",
         "Start with a question you can answer: for this fixed set of lookups, does enabling the cache reduce elapsed time by at least 20%, while returning the same answers? Elapsed time is the time from a stated start to a stated finish. The minimum useful reduction is a decision threshold, chosen before seeing the result.",
-        "These invented paired timings let you practise the arithmetic before collecting measurements. A is the original version; B is the changed version. Each row describes one comparison. A smaller B time favours the change. Keep the denominator explicit: the reduction is (A − B) / A."
+        "These invented paired timings let you practise the arithmetic before collecting measurements. $A$ is the original version; $B$ is the changed version. Each row describes one comparison. A smaller $B$ time favours the change. Keep the denominator explicit: the proportional reduction is $(A-B)/A$."
       ],
       "predict": "Does a reduction from 100 ms to 85 ms meet a 20% target?",
       "look": "The target is a question about useful magnitude. Counting pairs is descriptive; it does not establish how the change will perform on future runs.",
@@ -149,7 +149,7 @@
       ],
       "predict": "Can two distinct reference durations produce the same displayed reading?",
       "look": "Several different durations become indistinguishable. The offset example changes absolute values without changing pairwise differences.",
-      "change": "Reduce resolution_ms to 1. Then replace the constant offset with [0, 1, 2, 3, 4, 5]. Which comparisons remain trustworthy?",
+      "change": "Reduce `resolution_ms` to 1. Then replace the constant offset with `[0, 1, 2, 3, 4, 5]`. Which comparisons remain trustworthy?",
       "question": "A sensor consistently reads 2 °C too high. Repeating it 1,000 times will mainly do what?",
       "options": [
         "Remove the calibration offset.",
@@ -219,7 +219,7 @@
       ],
       "predict": "If both services improve equally, how large is the adjusted treatment difference?",
       "look": "A negative change means lower elapsed time. The treated change includes a trend the control also experienced.",
-      "change": "Set treated_after to 100. Compare the unadjusted and adjusted claims.",
+      "change": "Set `treated_after` to 100. Compare the unadjusted and adjusted claims.",
       "question": "A training programme starts just as an easier exam replaces the old exam. What comparison would help?",
       "options": [
         "Only the trainees’ old and new scores.",
@@ -359,7 +359,7 @@
       ],
       "predict": "Can cache-on be slower for one workload and faster for another?",
       "look": "The lines have different slopes. That is the interaction in this table; uncertainty about real effects would require repeated experiments.",
-      "change": "Change on_ms for the unique workload to 60. What happens to the difference of effects?",
+      "change": "Change `on_ms` for the unique workload to 60. What happens to the difference of effects?",
       "question": "A material change helps at high temperature and hurts at low temperature. What should you report?",
       "options": [
         "Only the average benefit.",
@@ -424,7 +424,7 @@
       "goal": "Explain the difference between standard deviation and standard error.",
       "explain": [
         "The sample standard deviation describes how widely individual observations vary around their mean. It uses the same units as the observations. A larger standard deviation means a wider spread, not necessarily a less precisely estimated mean if the sample is much larger.",
-        "For independent observations from a stable population with finite variance, the estimated standard error of the mean is sample standard deviation divided by the square root of sample size. It estimates how much sample means would vary under repeated sampling.",
+        "For independent observations from a stable population with finite variance, the estimated standard error of the mean is $s/\\sqrt{n}$, where $s$ is the sample standard deviation and $n$ is the sample size. It estimates how much sample means would vary under repeated sampling.",
         "The seeded simulations below draw different numbers of independent observations from the same normal distribution. Sampling variation means their sample standard deviations are not exactly equal. Standard error usually falls as sample size grows under this model, while individual observations remain variable."
       ],
       "predict": "Does collecting more observations make each individual observation less variable?",
@@ -564,7 +564,7 @@
       "goal": "Construct and interpret a t confidence interval for a population mean.",
       "explain": [
         "An estimate from a sample changes when the sample changes. A confidence interval is built by a procedure intended to cover a target population quantity at a stated rate over repeated sampling under its assumptions.",
-        "For independent observations from a normal population, a t interval for the mean is sample mean plus or minus a t critical value times the estimated standard error. With sufficiently regular larger samples, the method can also be an approximation outside exact normality. Small, strongly skewed samples need particular care. The degrees of freedom supplied to SciPy are n − 1, where n is the sample count; this accounts for estimating the mean when computing sample spread.",
+        "For independent observations from a normal population, a t interval for the mean is $\\bar{x}\\pm t^*s/\\sqrt{n}$: sample mean plus or minus a t critical value times the estimated standard error. With sufficiently regular larger samples, it can also approximate other populations. Small, strongly skewed samples need particular care. The degrees of freedom supplied to SciPy are $n-1$, accounting for estimating the mean when computing sample spread.",
         "The target here is the population mean elapsed time, not the time of the next request. A 95% confidence procedure does not say that 95% of observations lie in the interval. After the interval is computed, frequentist coverage is a property of the procedure, not a probability assigned to the fixed population mean."
       ],
       "predict": "Should this interval contain nearly every individual reading?",
@@ -639,7 +639,7 @@
       ],
       "predict": "If you have eight run differences, how many values belong in each bootstrap resample?",
       "look": "The statistic is the mean paired difference, and the resampling unit is an independent run difference. Changing either changes the question.",
-      "change": "Change method=\"basic\" to method=\"percentile\" and then \"BCa\". Compare the results without choosing a method solely because its interval is more favourable.",
+      "change": "Change `method=\"basic\"` to `method=\"percentile\"` and then `\"BCa\"`. Compare the results without choosing a method solely because its interval is more favourable.",
       "question": "A dataset has 12 independently treated classrooms and 20 pupils per classroom. What must a suitable resampling plan preserve?",
       "options": [
         "The classroom clusters and treatment design.",
@@ -669,8 +669,8 @@
       "goal": "Compare an estimated proportional improvement and its interval with a prespecified useful threshold.",
       "explain": [
         "An effect size describes the magnitude of a difference. A 2 ms reduction can be decisive for one task and irrelevant for another. Decide the minimum useful benefit from the decision context, before looking at the results.",
-        "For each paired run below, calculate the natural logarithm of A/B, written log(A/B). The exponential function exp reverses this transformation. Logs treat reciprocal ratios symmetrically. A t interval for the mean log ratio can be transformed back with exp to describe a geometric mean A/B time ratio. This is not a ratio of arithmetic means.",
-        "A/B above 1 favours B. A 20% time reduction means B/A is at most 0.8, so A/B must be at least 1.25. An interval that lies above 1 but crosses 1.25 supports a positive benefit under the model, while leaving the useful threshold unresolved. Failure to resolve a threshold is not proof of no useful effect."
+        "For each paired run below, calculate $\\log(A/B)$, the natural logarithm of the time ratio. The exponential function $\\exp$ reverses this transformation. Logs treat reciprocal ratios symmetrically. A t interval for the mean log ratio can be transformed back with $\\exp$ to describe a geometric mean $A/B$ time ratio. This is not a ratio of arithmetic means.",
+        "An $A/B$ ratio above $1$ favours B. A 20% time reduction means $B/A\\le0.8$, so $A/B\\ge1.25$. An interval that lies above $1$ but crosses $1.25$ supports a positive benefit under the model, while leaving the useful threshold unresolved. Failure to resolve a threshold is not proof of no useful effect."
       ],
       "predict": "Does an A/B ratio of 1.20 mean B takes 20% less time?",
       "look": "The ratio interval and useful threshold answer different questions. The central estimate alone is insufficient to establish a minimum benefit.",
@@ -706,11 +706,11 @@
         "A null hypothesis is a statistical reference claim, here that the population mean difference is zero. A hypothesis test compares an observed statistic, such as a sample mean, with what a specified model predicts under that claim. Its decision rule can reject the null when the statistic is sufficiently extreme.",
         "Power is the probability that a specified test rejects its null when a particular alternative model is true. It depends on sample size, effect, variation and the decision rule. Here a two-sided t test compares a mean with zero; two-sided means departures in either direction can count. Its p-value is a tail probability under the null model, not the probability the null is true. The next module builds this mechanism in detail.",
         "This simulation asks how often that test detects a 3 ms shift with independent normal differences of standard deviation 10 ms. Rejecting at p<0.05 is a prespecified simulation rule, not a truth threshold. Each row repeats whole experiments at one fixed sample size.",
-        "Each row repeats whole experiments at a fixed sample size. Choose the effect that matters and a precision or power goal before collecting the real data. A noisy pilot's estimated effect can be optimistic. Sensitivity analysis over plausible effects and variation gives a more honest plan than one exact-looking count."
+        "Choose the effect that matters and a precision or power goal before collecting real data. A noisy pilot’s estimated effect can be optimistic. Sensitivity analysis over plausible effects and variation gives a more honest plan than one exact-looking count."
       ],
       "predict": "Will a larger sample make a tiny effect more practically useful?",
       "look": "A larger sample can increase detection of the specified effect. It does not make the effect larger, fix bias or guarantee detection in one experiment.",
-      "change": "Try effect_ms=0, then 1, then 6. Under zero, the detection fraction estimates a false-positive rate rather than power for a nonzero effect.",
+      "change": "Try `effect_ms=0`, then `1`, then `6`. Under zero, the detection fraction estimates a false-positive rate rather than power for a nonzero effect.",
       "question": "A study fails to reject zero with a small sample. Which conclusion follows?",
       "options": [
         "The effect is exactly zero.",
@@ -745,7 +745,7 @@
       ],
       "predict": "Under a zero-mean model, must every sample mean be zero?",
       "look": "The statistic varies even when the model has no mean effect. Surprise depends on the spread and the sample size in that model.",
-      "change": "Move observed_mean from -5 to -1. Then increase the model standard deviation. Which changes make the observation less surprising?",
+      "change": "Move `observed_mean` from -5 to -1. Then increase the model standard deviation. Which changes make the observation less surprising?",
       "question": "A null model assumes independent observations. If your observations share session-level noise, what is the concern?",
       "options": [
         "The reference distribution may be wrong for the data collection process.",
@@ -775,7 +775,7 @@
       "goal": "Run a paired randomisation test without breaking the experimental blocks.",
       "explain": [
         "In a paired randomised experiment, A and B can be assigned to two positions within each block. Under a sharp no-treatment-effect null, swapping their labels within a block would not change the underlying outcomes. That assignment mechanism generates a reference distribution.",
-        "SciPy's samples permutation mode swaps the treatment labels while preserving pairs. The statistic here is mean(B − A). We enumerate all assignments for these eight invented pairs; there are 2 to the power of 8 possible label patterns. This differs from shuffling all sixteen readings together.",
+        "SciPy’s `samples` permutation mode swaps the treatment labels while preserving pairs. The statistic here is $\\operatorname{mean}(B-A)$. We enumerate all assignments for these eight invented pairs: $2^8=256$ label patterns. This differs from shuffling all sixteen readings together.",
         "The randomisation interpretation relies on the actual within-block assignment and no interference or carryover that invalidates it. For observational paired data, a label-swap test instead needs an appropriate exchangeability or symmetry argument. A software option does not supply that argument."
       ],
       "predict": "What information would be lost by shuffling all readings across all machines?",
@@ -815,7 +815,7 @@
       ],
       "predict": "Can a 0.2 ms effect become statistically distinguishable with a large enough sample?",
       "look": "The practical effect in the generator is unchanged. The test becomes more sensitive to it as the independent sample grows.",
-      "change": "Set effect_ms to .02. State a useful threshold before deciding whether any detected difference matters.",
+      "change": "Set `effect_ms` to `.02`. State a useful threshold before deciding whether any detected difference matters.",
       "question": "A report gives p=0.03. Which interpretation is defensible?",
       "options": [
         "There is a 3% probability the null is true.",
@@ -845,8 +845,8 @@
       "goal": "Explain why selecting the smallest p-value changes the false-positive rate.",
       "explain": [
         "A false positive is rejection of a true null hypothesis under a specified decision rule. A test with a 0.05 false-positive rate under its assumptions does not give the same rate to a procedure that runs twenty tests and reports only the smallest p-value.",
-        "If tests are independent and each has a 0.05 chance of rejection under its null, the chance of at least one rejection among m tests is 1 − (1 − 0.05) to the power m. Independence is an assumption of this formula, not a general property of many metrics.",
-        "The simulation uses independent normal metrics with no mean effect. A Bonferroni rule compares each p-value with 0.05/m to control the probability of any false rejection at no more than 0.05 when the individual tests are valid, even without independence. Prespecify a primary outcome, report the search and treat discoveries as candidates for fresh confirmation."
+        "If tests are independent and each has a $0.05$ chance of rejection under its null, the chance of at least one rejection among $m$ tests is $1-(1-0.05)^m$. Independence is an assumption of this formula, not a general property of many metrics.",
+        "The simulation uses independent normal metrics with no mean effect. A Bonferroni rule compares each p-value with $0.05/m$ to control the probability of any false rejection at no more than $0.05$ when the individual tests are valid, even without independence. Prespecify a primary outcome, report the search and treat discoveries as candidates for fresh confirmation."
       ],
       "predict": "Will twenty independent null tests produce at least one p<0.05 in only 5% of experiments?",
       "look": "The unadjusted search is a different procedure from one prespecified test. The simulation and formula describe independent metrics, while the Bonferroni bound is broader.",
@@ -885,7 +885,7 @@
       ],
       "predict": "Can dependent interim checks still inflate the chance of at least one threshold crossing?",
       "look": "The data-generating model is identical for both rules. The different decision procedures produce different false-positive behaviour.",
-      "change": "Replace looks with [100], then list(range(10, 101, 10)). Explain why the latter is not ten independent tests.",
+      "change": "Replace looks with `[100]`, then `list(range(10, 101, 10))`. Explain why the latter is not ten independent tests.",
       "question": "A team adds ten more observations whenever p is above 0.05 and stops at the first success. What is the issue?",
       "options": [
         "The conventional fixed-sample interpretation no longer matches the procedure.",
@@ -1055,7 +1055,7 @@
       "goal": "Produce a scoped evidence report another person can reproduce and challenge.",
       "explain": [
         "Your final investigation combines a question, a prospective plan, observations and an analysis. Write the plan before collecting new evidence: treatment, response, useful threshold, experimental unit, randomisation, reset, count and exclusion rules. Record later deviations as deviations.",
-        "The editor starts with explicitly invented paired timings. You can upload a CSV with run_id, a_ms and b_ms columns, using one row per justified independent paired run. Positive finite times and unique run IDs are required. Uploading a file changes the input, not the experimental design: the software cannot verify independence or provenance.",
+        "The editor starts with explicitly invented paired timings. You can upload a CSV with `run_id`, `a_ms` and `b_ms` columns, using one row per justified independent paired run. Positive finite times and unique run IDs are required. Uploading a file changes the input, not the experimental design: the software cannot verify independence or provenance.",
         "The analysis estimates a geometric mean A/B ratio and an approximate 95% t interval on log ratios. Use it only when its independence and distribution assumptions fit your plan. If your imported rows are correlated blocks from the previous lesson, collect independent sessions or use an appropriate hierarchical analysis before making that inference. A descriptive report is still useful when assumptions are unresolved.",
         "Use the report fields below to explain the question, method, data source, findings, limitations and next test. Export the investigation as Markdown and save the original CSV plus run JSON. A result that leaves the useful threshold unresolved is a valid finding when reported honestly."
       ],

@@ -7,9 +7,12 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy, scipy, pandas
 ROOT = Path(__file__).resolve().parents[1]
-plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.spines.top':False,
-    'axes.spines.right':False,'figure.figsize':(7,3.4),'figure.facecolor':'#fbfaf6',
-    'axes.facecolor':'#fbfaf6','axes.labelcolor':'#233b35','text.color':'#233b35',
+sys.path.insert(0,str(ROOT/'scripts'))
+from visuals import illustration
+from figure_style import capture_figures
+plt.rcParams.update({'font.family':'DejaVu Sans','font.size':13,'axes.spines.top':False,
+    'axes.spines.right':False,'figure.figsize':(6.2,4.2),'figure.facecolor':'white',
+    'axes.facecolor':'white','axes.labelcolor':'#233b35','text.color':'#233b35',
     'svg.hashsalt':'scientific-method-lab','savefig.bbox':'tight'})
 
 def execute(lesson):
@@ -19,13 +22,9 @@ def execute(lesson):
     plt.close('all')
     with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
         exec(compile(code, lesson['code'], 'exec'), namespace)
-    images=[]
-    for n in plt.get_fignums():
-        image=io.StringIO()
-        plt.figure(n).savefig(image, format='svg', metadata={'Date':None})
-        images.append(image.getvalue())
+    images,narrow=capture_figures()
     plt.close('all')
-    return dict(stdout=output.getvalue(), figures=images)
+    return dict(stdout=output.getvalue(),figures=images,figures_narrow=narrow,illustration=illustration(lesson,namespace,output.getvalue()))
 
 if __name__=='__main__':
     course=json.loads((ROOT/'src/course.json').read_text())

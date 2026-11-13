@@ -67,3 +67,23 @@ Results appear after execution, with clear provenance and recoverable error/Stop
 states. Course modules are native disclosures; search opens matching modules and
 module deep links reveal their contents. Mathematical refreshers remain optional,
 readable disclosures where the course provides them.
+
+## Visual explanations and mathematical notation
+
+Give every investigation one visual explanation adjacent to the first concept:
+comparisons and decision thresholds, competing predictions, confounding,
+resolution, controls, pairing, clusters, distributions, sampling, missingness,
+intervals, resampling, multiplicity, causal structure and evidence records.
+Illustrations are labelled mathematical/reference examples, distinct from the
+learner's execution. Derive numerical illustrations from the published source
+or an explicitly stated mathematical model. Never present build timings as a
+learner's measurements. State independence, target quantities, units and scope.
+
+Use mathematical typesetting for formulas and code styling for literal Python.
+Do not add new mathematical prerequisites just to decorate a page. Keep one
+learning goal and a visible prediction, followed by actual execution, a change
+and a transfer question. Group code, actual results and the worked reference.
+Maintain readable type, responsive figures, optional notes/tools, truthful
+provenance, CSV/report exports and recoverable error/Stop states. Review normal
+and dark themes at phone/tablet widths, including the smallest reference labels
+and equations. Browser checks and author review do not establish learning gains.

@@ -8,5 +8,8 @@
     "dev": "npm run build && python3 -m http.server 5173 --directory .preview",
     "check": "python3 tests/test_examples.py && npm run build && node tests/links.mjs && python3 tests/browser.py"
   },
-  "dependencies": {"pyodide": "0.27.7"}
+  "dependencies": {
+    "katex": "0.16.22",
+    "pyodide": "0.27.7"
+  }
 }

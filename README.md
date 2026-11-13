@@ -10,6 +10,8 @@ Each investigation takes about 5–9 minutes for its first reading, experiment a
 question. The core route is about 3¼ hours, plus exploration and a final project.
 Basic Python reading helps; no prior statistics is assumed.
 
+Each lesson now includes a captioned visual explanation of its main idea. Formulas are typeset, literal Python is styled as code, and executed plots have phone and desktop versions plus full-size links. Reference illustrations remain separate from your actual run.
+
 ## The route
 
 1. **Ask a better question:** claims, predictions, variables, instruments and
@@ -77,7 +79,10 @@ No API keys, servers or paid services are required.
 - `src/course.json`: objectives, prose, questions, hints and primary sources.
 - `python/`: standalone executable learner examples.
 - `scripts/build.mjs`: static generation, executed worked examples and versioned assets.
-- `scripts/layout.mjs`: shared navigation, course overview and lesson layouts.
+- `scripts/layout.mjs`: shared navigation, course overview, notation and lesson layouts.
+- `scripts/visuals.py`: 30 mathematical/reference illustrations with explicit provenance.
+- `scripts/figure_style.py`: phone/desktop captures of the same executed plot data, shared by native Python and Wasm.
+- `src/rich-text.mjs`: escaped formatting for `$LaTeX$` maths and backtick Python syntax.
 - `src/app.js`, `src/worker.js`: local interaction and Python execution.
 - `src/editor.mjs`: syntax colour and line numbers around a native editing surface.
 - `src/style.css`, `src/fonts/`: responsive visual system and self-hosted fonts.

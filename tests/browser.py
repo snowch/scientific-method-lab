@@ -43,13 +43,13 @@ try:
         browser=p.chromium.launch(executable_path=None if os.environ.get('CI') else os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
         context=browser.new_context(viewport={'width':1440,'height':1000},accept_downloads=True)
         # No third-party request should be needed for fonts, code, plots or runtime.
-        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith('http://127.0.0.1:5174/') or route.request.url.startswith('data:') else route.abort())
+        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith('http://127.0.0.1:5174/') or route.request.url.startswith(('data:','blob:')) else route.abort())
         page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         visit(page,BASE)
         assert page.locator('.lesson-row').count()==30
         assert page.locator('.lesson-row h4').first.evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=17
         assert page.locator('#start-course').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
-        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(247, 249, 252)'
+        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(249, 250, 252)'
         assert 'DM Sans' in page.evaluate('getComputedStyle(document.documentElement).fontFamily')
         assert 'Sora' in page.locator('h1').evaluate('(el)=>getComputedStyle(el).fontFamily')
         open_optional(page,'course-example')
@@ -97,8 +97,15 @@ try:
                 b_nums=re.findall(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?',native)
                 assert len(a_nums)==len(b_nums),(lesson['slug'],actual,native)
                 for a,b in zip(a_nums,b_nums):assert math.isclose(float(a),float(b),rel_tol=2e-4,abs_tol=2e-4),(lesson['slug'],a,b)
+            native_record=json.loads((ROOT/'.cache/worked.json').read_text())['lessons'][lesson['slug']]
+            assert page.locator('#plots img').count()==len(native_record['figures'])
+            assert page.locator('#plots picture source[media="(max-width:700px)"]').count()==len(native_record['figures'])
             if i==0:
                 assert page.locator('#plots img').count()==1
+                assert page.locator('.concept-figure').is_visible()
+                assert page.locator('.explanation .katex').count()>=3
+                assert page.locator('.lab-workspace .worked').count()==1
+                assert page.locator('#plots a').get_attribute('href').startswith('blob:')
                 page.screenshot(path=str(RESULTS/'lesson-desktop.png'),full_page=True)
             page.locator('#mark-read').check()
             print(f'PASS Wasm {i+1:02d}: {lesson["slug"]}',flush=True)
@@ -170,13 +177,17 @@ try:
         # Theme persists, mobile has no page-wide overflow, all reading routes work.
         page.locator('#theme').click();assert page.locator('html').get_attribute('data-theme')=='dark'
         page.reload();assert page.locator('html').get_attribute('data-theme')=='dark'
-        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(13, 20, 34)'
+        assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(16, 26, 43)'
         page.screenshot(path=str(RESULTS/'lesson-dark.png'),full_page=True)
         for width in [390,320]:
             page.set_viewport_size({'width':width,'height':844})
             for lesson in LESSONS:
                 visit(page,BASE+'lessons/'+lesson['slug']+'.html')
                 assert page.locator('h1').inner_text()==lesson['title']
+                assert page.locator('.concept-figure').is_visible()
+                clipped=page.locator('.concept-figure svg:visible').evaluate_all('''svgs=>svgs.flatMap(svg=>{const f=svg.getBoundingClientRect();return [...svg.querySelectorAll('text')].flatMap(t=>{const r=t.getBoundingClientRect();return r.left<f.left-1||r.right>f.right+1||r.top<f.top-1||r.bottom>f.bottom+1?[t.textContent]:[]})})''')
+                assert not clipped,('diagram labels',width,lesson['slug'],clipped)
+                assert not page.locator('.concept-figure .math-display:visible').evaluate_all('els=>els.some(e=>e.scrollWidth>e.clientWidth+1)'),('equation reflow',width,lesson['slug'])
                 assert page.locator('.explanation p').first.evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=18
                 assert page.locator('#code').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
                 assert page.locator('#output').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
@@ -227,7 +238,10 @@ try:
         for lesson in LESSONS:
             response=static.goto(BASE+'lessons/'+lesson['slug']+'.html')
             assert response.status==200
-            assert static.locator('.explanation p').first.inner_text()==lesson['explain'][0]
+            assert static.locator('.explanation p').first.inner_text().startswith(re.split(r'[$`]',lesson['explain'][0])[0])
+            assert static.locator('.concept-figure').is_visible()
+            assert static.locator('.concept-figure figcaption').inner_text().strip()
+            assert static.locator('.concept-figure .katex-error').count()==0
             static.locator('.worked summary').click()
             assert static.locator('.worked pre').inner_text().strip()
         assert not any('/engine/' in url for url in requests)

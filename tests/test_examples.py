@@ -10,6 +10,40 @@ execute=importlib.util.module_from_spec(spec);spec.loader.exec_module(execute)
 COURSE=json.loads((ROOT/'src/course.json').read_text())
 LESSONS=COURSE['lessons']
 class CourseTests(unittest.TestCase):
+    def test_bootstrap_illustration_preserves_run_units(self):
+        record=execute.execute(LESSONS[17])['illustration']
+        original={r['id']:r['value'] for r in record['original']}
+        resample=record['resample']
+        self.assertEqual(len(resample),len(original))
+        self.assertLess(len(set(r['id'] for r in resample)),len(resample))
+        for row in resample:self.assertEqual(row['value'],original[row['id']])
+    def test_responsive_plot_capture_keeps_executed_values(self):
+        import matplotlib.pyplot as plt
+        from figure_style import capture_figures
+        plt.close('all')
+        figure,ax=plt.subplots();line,=ax.plot([0,1,2],[4,1,7],label='Executed series')
+        ax.set_xlabel('Measured input');ax.set_ylabel('Outcome');ax.legend()
+        wide,narrow=capture_figures()
+        self.assertEqual(len(wide),1);self.assertEqual(len(narrow),1)
+        self.assertNotEqual(wide[0],narrow[0])
+        np.testing.assert_array_equal(line.get_xdata(),[0,1,2])
+        np.testing.assert_array_equal(line.get_ydata(),[4,1,7])
+        plt.close('all')
+
+    def test_phone_colour_scale_preserves_scatter_data(self):
+        import matplotlib.pyplot as plt
+        from figure_style import capture_figures
+        plt.close('all')
+        figure,ax=plt.subplots()
+        points=ax.scatter([1,3],[2,4],c=[.1,.8],vmin=0,vmax=1)
+        figure.colorbar(points,ax=ax,label='Background load')
+        offsets=points.get_offsets().copy();colours=points.get_array().copy()
+        capture_figures()
+        np.testing.assert_array_equal(points.get_offsets(),offsets)
+        np.testing.assert_array_equal(points.get_array(),colours)
+        self.assertEqual((points.norm.vmin,points.norm.vmax),(0,1))
+        self.assertEqual(points.colorbar.orientation,'horizontal')
+        plt.close('all')
     def test_every_published_example_executes(self):
         for lesson in LESSONS:
             with self.subTest(lesson=lesson['slug']):
