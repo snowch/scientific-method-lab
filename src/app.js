@@ -10,8 +10,8 @@ function get(key,fallback=''){
 function put(key,value){
  try{localStorage.setItem(prefix+key,String(value));return true}catch{
   storageAvailable=false;
-  const target=$('save-note')||$('progress-status');
-  if(target)target.textContent='Browser storage is unavailable or full. Export your work before leaving this page.';
+  const target=$('storage-error')||$('status')||$('save-note')||$('progress-status');
+  if(target){target.hidden=false;target.textContent='Browser storage is unavailable or full. Download your code or export a run/report before leaving.';}
   return false;
  }
 }
@@ -71,11 +71,21 @@ function initializeOverview({lessons}){
  }
  progress();
  if(!storageAvailable)$('progress-status').textContent='Browser storage is unavailable. Use exports to keep your work.';
+ const modules=[...document.querySelectorAll('.module')];
+ const savedOpen=new Map();let searching=false;
+ const revealModule=()=>{const id=decodeURIComponent(location.hash.slice(1));const module=document.getElementById(id);if(module?.classList.contains('module'))module.open=true};
+ revealModule();window.addEventListener('hashchange',revealModule);
  $('search').addEventListener('input',()=>{
   const words=$('search').value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  if(words.length&&!searching){for(const module of modules)savedOpen.set(module,module.open);searching=true}
   let count=0;
   document.querySelectorAll('.lesson-row').forEach(row=>{const match=words.every(word=>row.dataset.search.includes(word));row.hidden=!match;if(match)count++});
-  document.querySelectorAll('.module').forEach(module=>module.hidden=![...module.querySelectorAll('.lesson-row')].some(row=>!row.hidden));
+  for(const module of modules){
+   module.hidden=![...module.querySelectorAll('.lesson-row')].some(row=>!row.hidden);
+   if(words.length)module.open=!module.hidden;
+   else if(searching)module.open=savedOpen.get(module)??false;
+  }
+  if(!words.length){searching=false;savedOpen.clear()}
   $('search-count').textContent=`${count} investigation${count===1?'':'s'}`;
   $('search-empty').hidden=count!==0;
  });
@@ -114,9 +124,10 @@ function initializeLesson(lesson){
  const refreshEditor=attachEditor($('code'));
  document.querySelectorAll('[data-save]').forEach(el=>{
   el.value=get(draftKey(el.dataset.save));
+  if(el.value&&el.closest('details')&&el.id!=='code')el.closest('details').open=true;
   el.addEventListener('input',()=>put(draftKey(el.dataset.save),el.value));
  });
- if(!storageAvailable)$('save-note').textContent='Browser storage is unavailable. Export your work before leaving.';
+ if(!storageAvailable){$('storage-error').hidden=false;$('storage-error').textContent='Browser storage is unavailable. Download your code or export a run/report before leaving.';}
  $('mark-read').checked=get('read:'+slug)==='true';
  $('mark-read').addEventListener('change',()=>{put('read:'+slug,$('mark-read').checked);updateReadMarks()});
  function stale(){
@@ -138,9 +149,11 @@ function initializeLesson(lesson){
   download(slug+'-run.json',JSON.stringify({...lastRun,notes},null,2));
  });
  function controls(running){
-  busy=running;document.querySelector('.experiment').classList.toggle('is-running',running);$('code-editor').setAttribute('aria-busy',String(running));$('run').disabled=running;$('stop').disabled=!running;$('restore').disabled=running;
+  const returnFocus=!running&&document.activeElement===$('stop');
+  busy=running;document.querySelector('.experiment').classList.toggle('is-running',running);$('code-editor').setAttribute('aria-busy',String(running));$('run').disabled=running;$('stop').disabled=!running;$('stop').hidden=!running;$('restore').disabled=running;
   if($('csv-upload'))$('csv-upload').disabled=running;
   if($('clear-csv'))$('clear-csv').disabled=running||csv===null;
+  if(returnFocus)$('run').focus({preventScroll:true});
  }
  function terminate(message){
   revision++;clearTimeout(timer);worker?.terminate();worker=null;controls(false);$('status').textContent=message;
@@ -150,12 +163,12 @@ function initializeLesson(lesson){
  async function run(){
   if(busy)return;
   const source=$('code').value,input=csv,inputName=csvName,runRevision=++revision;
-  controls(true);$('status').textContent='Loading Python and statistics packages. First run can take a moment…';
+  $('editor-tools').open=false;controls(true);$('status').textContent='Loading Python and statistics packages. First run can take a moment…';
   if(lastRun)$('output-provenance').textContent='A new execution is in progress. The visible output still belongs to the previous run.';
   const fail=message=>{
    if(runRevision!==revision)return;
    terminate('Python could not finish. Check the message, then edit or run again.');
-   $('output').textContent=message;$('output').classList.add('error');$('plots').replaceChildren();
+   $('run-result').hidden=false;$('output').textContent=message;$('output').classList.add('error');$('plots').replaceChildren();
    $('output-provenance').textContent='Execution failed before a complete result could be recorded. Previous completed run export, if any, is unchanged.';
   };
   timer=setTimeout(()=>fail('Python initialization exceeded two minutes. Check your connection and run again.'),120000);
@@ -170,13 +183,14 @@ function initializeLesson(lesson){
    if(data.type==='error'){fail(data.message);return}
    if(data.type!=='result')return;
    clearTimeout(timer);controls(false);
+   $('run-result').hidden=false;
    const {stdout,error,figures,versions}=data.value;
    lastRun={schema:1,course:'scientific-method-lab',lesson:slug,executed_at:new Date().toISOString(),source,input_csv:input,input_name:inputName,stdout,error,figures_svg_base64:figures,versions,environment:{user_agent:navigator.userAgent,timing_scope:'Local browser Pyodide; see executed source for boundaries.'}};
    $('output').textContent=(stdout||'No text was printed.')+(error?'\n'+error:'');
    $('output').classList.toggle('error',!!error);
    $('plots').replaceChildren(...figures.map((svg,i)=>{const image=document.createElement('img');image.className='plot';image.src='data:image/svg+xml;base64,'+svg;image.alt=`Plot ${i+1} generated by your actual Python execution. Read its axis labels and the text output to interpret it.`;return image}));
    $('status').textContent=error?'Python reported an error. Edit the code and run again.':'Completed. Inspect the output, then change one thing.';
-   $('export-run').disabled=false;stale();
+   $('export-run').disabled=false;$('export-run').hidden=false;stale();
   };
   worker.postMessage({source,csv:input});
  }
@@ -229,3 +243,13 @@ function initializeLesson(lesson){
  }
  controls(false);
 }
+
+document.addEventListener('click',event=>{
+ for(const details of document.querySelectorAll('.header-help[open],.editor-tools[open]'))if(!details.contains(event.target))details.open=false;
+});
+document.addEventListener('keydown',event=>{
+ if(event.key!=='Escape')return;
+ const open=[...document.querySelectorAll('.header-help[open],.editor-tools[open]')];
+ const target=open.find(d=>d.contains(document.activeElement))||open.at(-1);
+ if(target){target.open=false;target.querySelector('summary').focus()}
+});

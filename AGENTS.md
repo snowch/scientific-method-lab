@@ -13,3 +13,9 @@ assumptions and target quantity of inference methods. Preserve self-hosted,
 pinned Python assets, relative Pages paths, keyboard access, error recovery,
 local drafts and portable exports. Reading marks and successful runs are separate.
 Record sources, review findings, tests and evidence gaps in `docs/review.md`.
+
+Prefer a quiet lesson interface: one visible learning goal, an editorial reading
+flow, and optional notes/help/tools. Show actual output after execution; expose
+Stop while running and export after a recorded run. Preserve large text, source
+provenance, accessible recovery and the complete learning activities. Avoid
+reintroducing duplicate goal cards, numbered jump bars or repeated ready copy.

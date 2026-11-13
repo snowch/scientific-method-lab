@@ -193,3 +193,70 @@ JavaScript-free reading. New assertions enforce the reading/code minimums and
 check 200% text-size reflow for the overview, a lesson and field notes at 1440px,
 390px and 320px. Code/gutter line heights remain equal. Screenshots from the
 focused review are under ignored `test-results/readability/`.
+
+
+## 2026-11-13 — visual clutter review
+
+Prompted by the user's tablet screenshots and concern that the UI is noisy. Reviewed the live overview plus first, middle and capstone lessons at 390px, 820px and 1440px. This is a design review; it makes no frontend or deployment change. Browser observations and screenshots are held in the workspace's `scratch/course-ui-review/` directory.
+
+The shared lesson template exposes too much supporting structure at once. At 820px, this course's first explanatory paragraph starts at about 581px and its editor at 1533px. These coordinates are observations of the current initial state, not usability targets or learner-study results. Prior tests checked execution, readability and reflow; they did not establish low cognitive load.
+
+High-priority recommendations:
+
+1. Use one compact lesson navigation bar. Keep one small module/lesson context line, title and one-sentence learning intention. Remove the duplicate outcome card and permanent numbered jump-navigation row from ordinary short lessons.
+2. Create an editorial reading flow with plain headings and whitespace. Reserve framing for the executable workspace and meaningful exceptional states. Present the change task and ordinary answer choices without separate coloured or bordered cards.
+3. Replace the empty pre-run result panel and repeated ready/no-result/device messages with one compact status. Show the result area after execution; keep one clear provenance label then. Expose Stop during execution and export after a completed run. Keep error, stale-output and recovery information available when relevant.
+4. Put runtime details, keyboard help, downloads and ancillary actions behind a secondary control. Make notes and hints optional disclosures. Keep source/provenance and scientific or mathematical limitations available without repeating boilerplate throughout every lesson.
+5. Preserve the current large reading/code type, course depth, predictions, experiments, transfer questions and accessibility. The target is a calmer presentation of the same learning design, rather than adding another colour scheme or reducing text size.
+
+Course-specific findings: The supplied screenshots match the shared-template problems especially clearly: a boxed learning outcome, three numbered jump links, a prediction panel, a permanently empty output frame, multiple readiness/runtime messages, a framed worked-example toggle, a coloured change task, three framed answer options, two separate hint rows, an always-open notes area and a separate framed reading mark. Keep the question, original input provenance, experiment and transfer task; simplify their presentation.
+
+Proposed default sequence: compact course context; title and one goal; explanation; prediction and experiment; actual results when present; one practice question; next lesson. Optional help belongs beside the relevant activity. Scientific Method Lab is the appropriate reference for a later shared-template simplification, followed by Monte Carlo Lab and SymPy Lab.
+
+Evidence gap: this is a screenshot/live-browser and author review, not an observed learner study. The user's screenshots provide real qualitative evidence that the existing visual hierarchy is distracting. A revised design should be checked at tablet widths as well as the existing phone and desktop widths, including before-run, running, error and completed-result states.
+
+
+## 2026-11-13 — quiet interface implementation
+
+Implemented the clutter review across the course overview and lesson layout.
+The shared renderer is in `scripts/quiet.mjs`, with local copies in each course
+so deployment remains independent. `src/quiet.css` is combined into the existing
+content-fingerprinted stylesheet.
+
+- One compact header, one context line and one visible learning goal. Removed
+  the duplicate outcome card, numbered section-jump bar and secondary mobile bar.
+- Prediction questions remain visible; recording a prediction and writing notes
+  are optional. Saved text reopens its disclosure. Ordinary instructions, answer
+  options, change tasks and reading marks use lightweight editorial styling.
+- No empty pre-run output panel or repeated readiness/device boilerplate. Actual
+  output and its provenance appear after a result. Stop appears during execution;
+  export appears for a recorded run. Runtime information and downloads are under
+  Tools. Escape restores focus from support menus.
+- Native module disclosures replace the overview's card grid and marketing
+  sections. Search opens matching modules, clearing search restores their prior
+  state, and module hashes open their target. Example previews and portable-work
+  controls remain available below the curriculum.
+- SymPy's refreshers remain available as quiet disclosures; labelled equations
+  share an unboxed results area. Code, mathematical examples, CSV interfaces,
+  reports, exact-source exports and package versions are preserved.
+
+Fresh 820px-wide before/after inspection of the first lesson: explanation starts
+at approximately 581px → 255px; editor starts at 1533px → 887px;
+initial page height is 4273px → 2664px. These are measured rendering
+coordinates for this sample, not learning-outcome claims. Also inspected 390px
+and 1440px screenshots. Main reading text remains 20px on desktop/tablet and
+18px on phones, with 16px code.
+
+Verification retains the full native and real-Wasm suites, plus initial-state
+checks and targeted 820/1024px regressions for tablet navigation, optional tools,
+search, module deep links and source access. Existing phone, 200% text, saved
+draft, progress, mathematical output, CSV/report, error/Stop and static-reading
+checks remain in place. This visual/functional review does not replace a learner
+study; further density feedback from actual course use remains valuable.
+
+Local verification completed: the full native and real-Wasm browser suites passed
+for the quiet layout. After the final focus/save-error adjustments, rebuilt all
+three sites, rechecked their local links and ran focused browser checks for
+820/1024px navigation and deep links, Stop focus return, cancelled-run output,
+optional hints/notes, saved text reopening and unavailable-storage alerts.
+GitHub Actions runs the complete suite again before each Pages deployment.

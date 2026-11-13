@@ -55,3 +55,15 @@ error, Stop/restart, persistence and export paths. These are implementation
 checks, not evidence of learning. A next formative study should observe a novice
 without coaching, then ask for a fresh experimental-unit and interval task;
 record first attempts, assistance and post-help reasoning separately.
+
+## Quiet presentation
+
+Keep the learning structure while reducing simultaneous scaffolding. Present one
+plain learning goal followed by explanation, a visible prediction question, the
+experiment and a transfer case. Recording the prediction and keeping field notes
+are optional disclosures; saved text reopens them on return. Progressive hints,
+worked examples and runtime tools stay available beside the relevant activity.
+Results appear after execution, with clear provenance and recoverable error/Stop
+states. Course modules are native disclosures; search opens matching modules and
+module deep links reveal their contents. Mathematical refreshers remain optional,
+readable disclosures where the course provides them.
