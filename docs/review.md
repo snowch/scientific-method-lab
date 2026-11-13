@@ -164,3 +164,32 @@ scroll/Reset behaviour, mobile menu, both themes, CSV/report/progress exports,
 error/Stop recovery and JavaScript-free reading passed. Desktop and phone
 screenshots were inspected. A separate forced-colour check passed. No runtime
 package versions or learner data keys changed.
+
+## Readability follow-up, 2026-11-13
+
+The user reported that fonts were still small and authorised layout and colour
+changes. Applied the UX and learning-design review criteria again. Replaced the
+11–13px utility-heavy scale with rem-based role sizes: 20px-equivalent desktop
+lesson prose, 18px phone prose, 16px code/output and primary navigation, and at
+least 14px supporting HTML text at the standard browser font setting. Buttons
+and form fields are larger. The code textarea, highlight layer and gutter share
+a 28px-equivalent line rhythm.
+
+Stronger body-text contrast and a white reading surface improve separation from
+the navigation. The sidebar is wider, module headers and phone lesson rows
+reflow around larger text, and code/output stack at typical laptop widths rather
+than compressing the editor. The introductory chart labels were enlarged too.
+
+Inspected screenshots at 1440px, 390px and 320px. A 200% text-size check exposed a
+long inline code reference in field notes; allowing that reference to wrap fixed
+it without shrinking the text. The editor itself retains contained horizontal
+scrolling. Shorter chart-toggle labels and wrapping controls accommodate the
+larger scale.
+
+`PATH="$PWD/.venv/bin:$PATH" npm run check` passed with these changes: all 30
+native and real-Wasm examples, 32 pages, 1,541 links/fragments, both themes,
+390px/320px lesson reflow, CSV/report/progress exports, Stop/error recovery and
+JavaScript-free reading. New assertions enforce the reading/code minimums and
+check 200% text-size reflow for the overview, a lesson and field notes at 1440px,
+390px and 320px. Code/gutter line heights remain equal. Screenshots from the
+focused review are under ignored `test-results/readability/`.

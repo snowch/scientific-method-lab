@@ -38,3 +38,17 @@ comparison toggle, keyboard controls, mobile menu, editor highlight/scroll sync,
 restored drafts, loading/error/Stop recovery and exports. Run the full existing
 course checks. Record findings and screenshots in docs/review.md. These checks
 establish implementation behaviour, not observed learning effectiveness.
+
+## Readability follow-up
+
+The user found the typography too small and authorised broader layout changes.
+Use 20px equivalent lesson prose on desktop, 18px on phones, 16px code and
+results, 16–18px primary controls/navigation, and no supporting HTML text below
+14px at the standard browser font setting. Use rem units so the browser's default
+text-size preference scales the interface. Keep prose to a comfortable measure,
+stronger text contrast and a white reading surface in the light theme. Give code
+the full available width at ordinary laptop sizes; stack results below it.
+
+Check computed sizes, 320px/390px reflow, both themes, 200% text scaling, editor
+highlight/gutter alignment and the existing execution/export flows. Avoid solving
+reflow by shrinking fonts back down.

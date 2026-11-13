@@ -37,6 +37,8 @@ try:
         page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         visit(page,BASE)
         assert page.locator('.lesson-row').count()==30
+        assert page.locator('.lesson-row h4').first.evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=17
+        assert page.locator('#start-course').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
         assert page.evaluate('getComputedStyle(document.documentElement).backgroundColor')=='rgb(247, 249, 252)'
         assert 'DM Sans' in page.evaluate('getComputedStyle(document.documentElement).fontFamily')
         assert 'Sora' in page.locator('h1').evaluate('(el)=>getComputedStyle(el).fontFamily')
@@ -60,6 +62,10 @@ try:
         # namespace; this also checks isolation without paying 30 import costs.
         # Every actual page is checked independently below at narrow widths.
         visit(page,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
+        assert page.locator('.explanation p').first.evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=20
+        assert page.locator('#code').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
+        assert page.locator('#output').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
+        assert page.locator('#code').evaluate('el=>getComputedStyle(el).lineHeight')==page.locator('.code-gutter').evaluate('el=>getComputedStyle(el).lineHeight')
         assert page.locator('#code-editor').evaluate("el=>el.classList.contains('is-highlighted')")
         assert page.locator('#code-highlight .token-keyword').count()>0
         for i,lesson in enumerate(LESSONS):
@@ -152,6 +158,9 @@ try:
             for lesson in LESSONS:
                 visit(page,BASE+'lessons/'+lesson['slug']+'.html')
                 assert page.locator('h1').inner_text()==lesson['title']
+                assert page.locator('.explanation p').first.evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=18
+                assert page.locator('#code').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
+                assert page.locator('#output').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),(width,lesson['slug'])
                 page.locator('#mark-read').check()
             visit(page,BASE)
@@ -170,6 +179,15 @@ try:
         page.screenshot(path=str(RESULTS/'lesson-mobile.png'),full_page=True)
         visit(page,BASE+'field-notes.html')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        # Larger browser text must reflow rather than force the whole page sideways.
+        for width in [1440,390,320]:
+            page.set_viewport_size({'width':width,'height':1000})
+            for route in ['', 'lessons/'+LESSONS[0]['slug']+'.html', 'field-notes.html']:
+                visit(page,BASE+route)
+                page.evaluate("document.documentElement.style.fontSize='200%'")
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),('200% text',width,route)
+            page.evaluate("document.documentElement.style.fontSize=''")
+        page.set_viewport_size({'width':390,'height':844})
         # Portable progress can restore notes in a genuinely fresh browser context.
         visit(page,BASE)
         page.locator('.portable-progress summary').click()
