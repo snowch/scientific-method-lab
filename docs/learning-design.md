@@ -87,3 +87,14 @@ Maintain readable type, responsive figures, optional notes/tools, truthful
 provenance, CSV/report exports and recoverable error/Stop states. Review normal
 and dark themes at phone/tablet widths, including the smallest reference labels
 and equations. Browser checks and author review do not establish learning gains.
+
+## 2026-11-14 — prerequisite repairs and illustrated entry
+
+Keep the essential route readable with optional panels closed. The homepage
+will pair one clear starting action with a bespoke course illustration: an
+experiment notebook for Scientific Method, possible-event tickets for Monte
+Carlo and an algebra area model for SymPy. The scene is an explanatory course
+identity, not an execution result or measured evidence. Use crisp scalable
+vectors, readable text, labelled shapes and a restrained shared composition;
+stack artwork below the introduction on phones and retain progress/search,
+keyboard controls, reduced-motion support and independent deployment.

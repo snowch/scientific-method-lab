@@ -276,3 +276,28 @@ The same executed Matplotlib figure is captured at desktop and phone sizes, with
 Author review covered 320px and 820px reference figures, phone light/dark examples, actual first-lesson output and every generated phone plot. The reference SVG label and equation audit passed for all 30 lessons. New regression coverage checks reference availability without JavaScript, diagram label bounds, equation reflow, responsive plot sources, resampling unit identity and preservation of plotted values. Existing native and real-Wasm checks cover all examples, numerical agreement (excluding machine-dependent timings), CSV/error/Stop paths, report/run/progress exports, drafts, keyboard access, 320/390px layouts, 820/1024px navigation and 200% text.
 
 These are mathematical, browser and author checks. No learner study has established the illustrations' learning effectiveness. Plot readability was reviewed in Chromium with emulated widths; it has not been validated on every physical phone or browser.
+
+## 2026-11-14 — illustrated course introduction
+
+Applied the repository learning-design and UX skills before and after the
+homepage work. A question notebook, comparison groups and magnifying glass
+introduce the course visually. The original SVG artwork is conceptual, with
+illustrative marks rather than measurement claims. The supplied Common Ground
+screenshot guided the composition; the scene and code are original.
+
+A dark blue hero pairs the illustration with a clear course promise and the
+existing Start/Continue action. The illustration stacks after the text on
+phones. Course search, module deep links, reading progress and portable work
+remain available; lesson reading layouts retain their quiet typography and
+learning activities. Artwork is embedded locally and requires no image service,
+remote fonts or animation. SVG title/description and keyboard focus are retained.
+
+Verification: all nine native tests passed; 30 real-Wasm examples matched their
+native results. The full check covered exports, CSV validation, saved drafts,
+error/Stop recovery, keyboard/tablet navigation, both themes, JavaScript-free
+reading and narrow/200% reflow. Link checks passed for 32 pages and 1,496 relative
+links/fragments. After the final progress-bar styling, rebuilt and repeated
+focused hero/quiet-layout checks. Captured all three new heroes at
+320/390/820/1440px and checked 200% text and label bounds. Inspected phone and
+tablet/desktop compositions. Evidence is in test-results/hero-*.png; these are
+functional and author-design checks, not a learner study.

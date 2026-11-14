@@ -36,6 +36,9 @@ def check_quiet_layout(browser,root,base,lessons):
                 assert page.locator('#course-sidebar').is_visible()
                 assert not page.locator('#course-menu-toggle').is_visible()
         visit('')
+        assert page.locator('.course-hero .hero-illustration').is_visible()
+        assert page.locator('.course-art title').text_content().strip()
+        assert page.locator('.course-hero #start-course').is_visible()
         assert page.locator('.module[open]').count()==1
         assert page.locator('.method-strip,.route-guide,.progress-panel,.closing').count()==0
         middle=lessons[len(lessons)//2]
