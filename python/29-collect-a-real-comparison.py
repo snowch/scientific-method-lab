@@ -3,6 +3,7 @@
 import time
 import numpy as np
 import pandas as pd
+block_count = 12
 rng = np.random.default_rng(121)
 values = list(range(2000))
 queries = rng.integers(0, 3000, 400).tolist()
@@ -12,7 +13,7 @@ def lookup(container):
 expected = lookup(containers["A"])
 assert lookup(containers["B"]) == expected
 rows = []
-for block in range(1, 13):
+for block in range(1, block_count + 1):
     order = rng.permutation(["A", "B"]).tolist()
     row = {"run_id": f"block-{block}", "order": "".join(order)}
     for name in order:

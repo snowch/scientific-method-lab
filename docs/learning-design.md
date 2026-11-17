@@ -98,3 +98,17 @@ identity, not an execution result or measured evidence. Use crisp scalable
 vectors, readable text, labelled shapes and a restrained shared composition;
 stack artwork below the introduction on phones and retain progress/search,
 keyboard controls, reduced-motion support and independent deployment.
+
+## Experiment controls and evidence recovery
+
+Keep the existing objectives and prerequisites. In the threshold and coverage
+lessons, learners edit one named setting, run Python again, and compare the
+labelled decision count or coverage with the previous result. The threshold
+changes the decision rule while the measurements stay fixed. A wider interval
+changes the procedure's coverage target while the simulated draws stay fixed.
+
+The timing lesson identifies the block count, the place to record a useful
+threshold before execution, and the exact timing boundary. Its rows describe
+one shared browser session. The capstone distinguishes the built-in example
+from a supplied CSV and exposes file requirements before execution. The report
+keeps the last successful source, input and output available after an error.

@@ -4,6 +4,9 @@ import os
 import numpy as np
 import pandas as pd
 from scipy import stats
+minimum_reduction_pct = 20
+if not 0 <= minimum_reduction_pct < 100:
+    raise ValueError("Use a reduction percentage from 0 up to but excluding 100")
 path = "data.csv"
 if os.path.exists(path):
     data = pd.read_csv(path)
@@ -27,5 +30,6 @@ print("Pairs:", len(logs))
 print("Geometric mean A/B ratio:", round(ratio, 4))
 print("Approximate 95% t interval for A/B:", np.exp(interval).round(4))
 print("Central B time reduction (%):", round(100 * (1 - 1/ratio), 2))
-print("20% reduction requires A/B >= 1.25.")
+required_ratio = 1 / (1 - minimum_reduction_pct / 100)
+print(f"{minimum_reduction_pct:g}% reduction requires A/B >= {required_ratio:.4g}.")
 print("Conditional inference: justify independent stable paired runs and approximately normal log ratios.")

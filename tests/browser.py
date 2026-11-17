@@ -17,7 +17,7 @@ def visit(page,url):
 def wait_result(page):
     page.wait_for_function("document.querySelector('#status').textContent.startsWith('Completed') || document.querySelector('#status').textContent.includes('error') || document.querySelector('#status').textContent.includes('could not')",timeout=150000)
     status=page.locator('#status').inner_text()
-    assert status.startswith('Completed'),status+'\n'+page.locator('#output').inner_text()
+    assert status.startswith('Completed'),status+'\n'+page.locator('#error-summary').text_content()
 
 def open_optional(page,identifier):
     details=page.locator('#'+identifier)
@@ -76,6 +76,11 @@ try:
         assert not page.locator('#run-result').is_visible()
         assert not page.locator('#stop').is_visible()
         assert not page.locator('#export-run').is_visible()
+        initial_code=page.locator('#code').input_value()
+        page.locator('#code').press('Tab')
+        assert page.evaluate('document.activeElement.id')=='run'
+        assert page.locator('#code').input_value()==initial_code
+        assert 'Ctrl+Enter' in page.locator('#editor-help').inner_text()
         assert page.locator('.outcome,.on-this-page,.mobile-course-bar').count()==0
         assert page.locator('.explanation p').first.evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=20
         assert page.locator('#code').evaluate('el=>parseFloat(getComputedStyle(el).fontSize)')>=16
@@ -109,15 +114,66 @@ try:
                 page.screenshot(path=str(RESULTS/'lesson-desktop.png'),full_page=True)
             page.locator('#mark-read').check()
             print(f'PASS Wasm {i+1:02d}: {lesson["slug"]}',flush=True)
+        # Follow the new settings in the learner-facing activities.
+        page.locator('#code').fill(initial_code.replace('minimum_reduction_pct = 20','minimum_reduction_pct = 10'))
+        page.locator('#run').press('Enter');wait_result(page)
+        assert 'Pairs meeting 10%: 5' in page.locator('#output').inner_text()
+        assert 'Useful threshold (10%)' in page.locator('#plots img').evaluate('img=>fetch(img.src).then(r=>r.text())')
+        for level in ('0.95','0.99'):
+            source=(ROOT/'python'/LESSONS[16]['code']).read_text().replace('confidence_level = 0.95','confidence_level = '+level)
+            page.locator('#code').fill(source)
+            page.locator('#run').click();wait_result(page)
+            output=page.locator('#output').inner_text()
+            assert f'Confidence level: {float(level):.0%}' in output
+            width=float(re.search(r'Mean interval width \(ms\): ([\d.]+)',output)[1])
+            coverage=float(re.search(r'Coverage fraction: ([\d.]+)',output)[1])
+            if level=='0.95':first_width,first_coverage=width,coverage
+            else:assert width>first_width and coverage>=first_coverage
+        assert '99% interval for mean elapsed time (ms)' in page.locator('#plots img').evaluate('img=>fetch(img.src).then(r=>r.text())')
+        page.set_viewport_size({'width':390,'height':844})
+        visit(page,BASE+'lessons/'+LESSONS[28]['slug']+'.html')
+        assert page.locator('#timing-setup').is_visible()
+        assert page.locator('#run').get_attribute('aria-describedby')=='timing-setup'
+        open_optional(page,'prediction-notes')
+        page.locator('#prediction').fill('Eight paired blocks. A reduction of 10% would be useful.')
+        timing=page.locator('#code').input_value().replace('block_count = 12','block_count = 8')
+        page.locator('#code').fill(timing)
+        page.locator('#run').click();wait_result(page)
+        timing_output=page.locator('#output').inner_text()
+        assert len(re.findall(r'^block-\d+,',timing_output,re.M))==8
+        assert 'Paired blocks share one runtime' in timing_output
         # CSV input must replace starter data; exports preserve executed inputs.
         visit(page,BASE+'lessons/'+LESSONS[-1]['slug']+'.html')
+        assert 'at least five' in page.locator('.upload-panel').inner_text()
+        assert 'invented starter data' in page.locator('#input-kind').inner_text()
         csv='run_id,a_ms,b_ms\na,100,80\nb,105,85\nc,110,88\nd,95,79\ne,120,94\n'
+        page.evaluate('''() => {
+            const original=File.prototype.text;
+            File.prototype.text=function(){
+                return new Promise((resolve,reject)=>{
+                    window.finishCsvRead=()=>{
+                        File.prototype.text=original;
+                        original.call(this).then(resolve,reject);
+                    };
+                });
+            };
+        }''')
+        page.locator('#csv-upload').focus()
         page.locator('#csv-upload').set_input_files({'name':'paired-runs.csv','mimeType':'text/csv','buffer':csv.encode()})
-        page.wait_for_function("document.querySelector('#csv-status').textContent.includes('Selected paired-runs.csv')")
+        page.wait_for_function("document.querySelector('#csv-status').textContent.startsWith('Reading')")
+        assert page.locator('#run').is_disabled()
+        assert page.locator('#csv-upload').is_disabled()
+        page.evaluate('window.finishCsvRead()')
+        page.wait_for_function("document.querySelector('#input-kind').textContent.includes('paired-runs.csv')")
+        assert page.evaluate('document.activeElement.id')=='csv-upload'
+        source=page.locator('#code').input_value().replace('minimum_reduction_pct = 20','minimum_reduction_pct = 10')
+        page.locator('#code').fill(source)
         page.locator('#run').click();wait_result(page)
-        assert 'uploaded CSV' in page.locator('#output').inner_text()
-        assert 'Pairs: 5' in page.locator('#output').inner_text()
-        page.locator('#report-question').fill('Is a 20% reduction established for these independent runs?')
+        successful_output=page.locator('#output').inner_text()
+        assert 'uploaded CSV' in successful_output and 'Pairs: 5' in successful_output
+        assert '10% reduction requires A/B >= 1.111.' in successful_output
+        assert 'paired-runs.csv' in page.locator('#output-provenance').inner_text()
+        page.locator('#report-question').fill('Is a 10% reduction established for these independent runs?')
         page.locator('#report-source').fill('Browser test fixture, invented paired runs.')
         download(page,'#export-run',RESULTS/'run.json')
         record=json.loads((RESULTS/'run.json').read_text())
@@ -132,24 +188,42 @@ try:
         assert 'changed after this run' in report and csv.strip() in report
         # Invalid CSV must fail visibly, then recover to starter input.
         restore_example(page)
-        page.locator('#csv-upload').set_input_files({'name':'bad.csv','mimeType':'text/csv','buffer':b'wrong,columns\n1,2\n'})
-        page.wait_for_function("document.querySelector('#csv-status').textContent.includes('Selected bad.csv')")
+        short_csv='run_id,a_ms,b_ms\na,100,80\nb,105,85\n'
+        page.locator('#csv-upload').set_input_files({'name':'short.csv','mimeType':'text/csv','buffer':short_csv.encode()})
+        page.wait_for_function("document.querySelector('#input-kind').textContent.includes('short.csv')")
         page.locator('#run').click()
         page.wait_for_function("document.querySelector('#status').textContent.includes('reported an error')",timeout=90000)
-        assert 'Need run_id' in page.locator('#output').inner_text()
+        assert 'at least five paired runs' in page.locator('#error-summary').inner_text()
+        assert 'short.csv' in page.locator('#error-input').inner_text()
+        assert page.locator('#output').inner_text()==successful_output
+        assert 'paired-runs.csv' in page.locator('#output-provenance').inner_text()
+        download(page,'#export-run',RESULTS/'run-after-error.json')
+        assert json.loads((RESULTS/'run-after-error.json').read_text())==record
+        download(page,'#export-report',RESULTS/'investigation-after-error.md')
+        report_after_error=(RESULTS/'investigation-after-error.md').read_text()
+        assert 'paired-runs.csv' in report_after_error and csv.strip() in report_after_error
+        report_output=report_after_error.split('### Actual output',1)[1]
+        assert 'short.csv' not in report_after_error and 'at least five' not in report_output
         page.locator('#clear-csv').click();page.locator('#run').click();wait_result(page)
         assert 'INVENTED starter' in page.locator('#output').inner_text()
+        assert 'invented starter data' in page.locator('#input-kind').inner_text()
+        assert not page.locator('#run-error').is_visible()
+        page.set_viewport_size({'width':1440,'height':1000})
         # Editor error and Stop must leave a viable next action.
         visit(page,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
         page.locator('#code').fill("print('before failure')\nraise ValueError('deliberate test error')")
         page.locator('#run').click()
         page.wait_for_function("document.querySelector('#status').textContent.includes('reported an error')",timeout=150000)
-        assert 'before failure' in page.locator('#output').inner_text()
-        assert 'deliberate test error' in page.locator('#output').inner_text()
+        assert 'deliberate test error' in page.locator('#error-summary').inner_text()
+        assert not page.locator('#run-result').is_visible()
+        assert not page.locator('#export-run').is_visible()
+        open_optional(page,'error-details')
+        assert 'before failure' in page.locator('#error-trace').inner_text()
         page.locator('#code').fill('while True: pass')
-        page.locator('#run').click();page.wait_for_function("document.querySelector('#status').textContent==='Running your Python…'",timeout=30000)
+        page.locator('#run').press('Enter');page.wait_for_function("document.querySelector('#status').textContent==='Running your Python…'",timeout=30000)
         assert page.locator('#stop').is_visible()
-        page.locator('#stop').click();assert 'Stopped' in page.locator('#status').inner_text()
+        assert page.evaluate('document.activeElement.id')=='stop'
+        page.locator('#stop').press('Enter');assert 'Stopped' in page.locator('#status').inner_text()
         assert page.evaluate('document.activeElement.id')=='run'
         restore_example(page)
         assert page.locator('#code-highlight code').text_content()==page.locator('#code').input_value()+'\n'
@@ -172,6 +246,13 @@ try:
         assert page.locator('#prediction').input_value()=='My saved prediction'
         assert '# saved draft' in page.locator('#code').input_value()
         assert page.locator('#mark-read').is_checked()
+        restore_example(page)
+        assert page.locator('#code').input_value()==initial_code
+        page.reload();page.wait_for_selector('html[data-ready=true]')
+        open_optional(page,'editor-tools')
+        page.locator('#recover-draft').click()
+        assert '# saved draft' in page.locator('#code').input_value()
+        assert page.evaluate('document.activeElement.id')=='code'
         page.locator('#code').evaluate('el=>{el.scrollTop=70;el.scrollLeft=30;el.dispatchEvent(new Event("scroll"))}')
         assert page.locator('#code').evaluate('el=>el.scrollLeft')==page.locator('#code-highlight').evaluate('el=>el.scrollLeft')
         # Theme persists, mobile has no page-wide overflow, all reading routes work.
@@ -232,6 +313,7 @@ try:
         assert second.locator('#progress-count').inner_text()=='30 / 30 read'
         visit(second,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
         assert second.locator('#notes').input_value()=='A note to preserve'
+        assert '# saved draft' in second.evaluate("localStorage.getItem('sml:v1:draft:make-a-claim-testable:restore-backup')")
         # Static reading does not need JS or any runtime assets.
         reading=browser.new_context(java_script_enabled=False,reduced_motion='reduce')
         static=reading.new_page();requests=[];static.on('request',lambda req:requests.append(req.url))

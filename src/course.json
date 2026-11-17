@@ -43,8 +43,8 @@
         "These invented paired timings let you practise the arithmetic before collecting measurements. $A$ is the original version; $B$ is the changed version. Each row describes one comparison. A smaller $B$ time favours the change. Keep the denominator explicit: the proportional reduction is $(A-B)/A$."
       ],
       "predict": "Does a reduction from 100 ms to 85 ms meet a 20% target?",
-      "look": "The target is a question about useful magnitude. Counting pairs is descriptive; it does not establish how the change will perform on future runs.",
-      "change": "Change the target line and comparison from 20 to 10. Did the measurements change, or only your decision rule?",
+      "look": "Find `Reduction per pair (%)` and `Pairs meeting 20%` in the output. The dashed line marks the useful threshold. The count describes these invented pairs.",
+      "change": "Change `minimum_reduction_pct` from `20` to `10` and select Run Python again. Compare the reductions per pair, the count and the dashed line. Which changed?",
       "question": "A claim says “the new process is better”. Which question is directly testable?",
       "options": [
         "Does it finish a fixed job at least 15% sooner, with the same correct result?",
@@ -604,7 +604,7 @@
       ],
       "predict": "Should all thirty plotted intervals cross the true mean?",
       "look": "The procedure produces both hits and misses. Once observed, an interval either contains this fixed mean or does not; we usually do not know which for real data.",
-      "change": "Change .975 to .995 and keep the “95%” labels honest by updating them to 99%. Compare coverage and width.",
+      "change": "Change `confidence_level` from `0.95` to `0.99` and select Run Python again. Compare `Coverage fraction` and `Mean interval width (ms)` with the first run. Both runs use the same seeded samples.",
       "question": "You run 100 valid experiments using a 95% confidence procedure. Must exactly 95 intervals cover the mean?",
       "options": [
         "No; the count varies across repetitions.",
@@ -1020,12 +1020,12 @@
       "goal": "Collect and export a paired timing record with correctness checks and explicit boundaries.",
       "explain": [
         "Now collect real elapsed times. Compare membership checks in a Python list and a set using the same integers and queries. Both must return the same hit count. A is the list; B is the set. The clock measures only the lookup loop, excluding construction and query generation.",
-        "The code uses a monotonic performance counter, checks one unmeasured warm-up for each method, then randomises order within twelve paired blocks. Each row records order and both elapsed times. These blocks share a Python runtime and a device; they are not guaranteed independent experiments. Warm-up does not prove stable operation.",
-        "Choose your block count and useful threshold before running. Keep the tab visible, record your device and repeat whole observations in separate sessions if your question concerns session-to-session variation. Download the run JSON to retain the exact code and actual output; download the Python to reproduce the procedure. The build's worked record is explicitly from another environment."
+        "The code uses a monotonic performance counter, checks one unmeasured warm-up for each method and randomises order within each pair of lookups. It records the order and both elapsed times in one row per pair. These blocks share a Python runtime and a device. To study variation between sessions, repeat the whole experiment in separate sessions.",
+        "Run the code with the tab visible. Record your device and use Export run to keep the exact code and elapsed times."
       ],
       "predict": "Which costs would a one-off job need to include that this lookup-only timer excludes?",
-      "look": "Your actual numbers will differ from the worked record. A changed device, interpreter or timing boundary defines a different comparison. A fast loop does not establish end-to-end application performance.",
-      "change": "Create a separate whole-job experiment that includes set construction in B’s timed boundary. Preserve equal useful work and report the changed question.",
+      "look": "Find `a_ms` for list lookups and `b_ms` for set lookups. Both times cover the lookup loop. The worked times came from the build environment. Compare within each pair when judging your threshold.",
+      "change": "Try a separate comparison that includes set construction. Inside the timer, replace `answer = lookup(containers[name])` with `answer = lookup(set(values) if name == \"B\" else containers[name])`. Update the printed timing description to say that B includes set construction. Run Python again and compare `b_ms` with your first result. The queries and hit-count check still define the same work.",
       "question": "You export twelve blocks from one browser session. What is a justified scope statement?",
       "options": [
         "These are twelve independently sampled customer deployments.",
@@ -1036,7 +1036,7 @@
       "feedback": "The record describes its tested boundary and environment. Generalisation and independent-session uncertainty need additional design and observations.",
       "hints": [
         "Name the machine, runtime and timing boundary.",
-        "Ask what actually changed between the twelve rows."
+        "Ask what changes between rows and what they share."
       ],
       "limit": "Pyodide executes real CPython in WebAssembly. These browser timings do not measure a native Python deployment, and timer precision can limit very short B readings.",
       "source": [
@@ -1055,13 +1055,13 @@
       "goal": "Produce a scoped evidence report another person can reproduce and challenge.",
       "explain": [
         "Your final investigation combines a question, a prospective plan, observations and an analysis. Write the plan before collecting new evidence: treatment, response, useful threshold, experimental unit, randomisation, reset, count and exclusion rules. Record later deviations as deviations.",
-        "The editor starts with explicitly invented paired timings. You can upload a CSV with `run_id`, `a_ms` and `b_ms` columns, using one row per justified independent paired run. Positive finite times and unique run IDs are required. Uploading a file changes the input, not the experimental design: the software cannot verify independence or provenance.",
+        "The published example starts with invented paired timings. Use Choose CSV to supply your own pairs. The checks beside that control describe the required file structure. You still need to justify the source and independence of the rows.",
         "The analysis estimates a geometric mean A/B ratio and an approximate 95% t interval on log ratios. Use it only when its independence and distribution assumptions fit your plan. If your imported rows are correlated blocks from the previous lesson, collect independent sessions or use an appropriate hierarchical analysis before making that inference. A descriptive report is still useful when assumptions are unresolved.",
         "Use the report fields below to explain the question, method, data source, findings, limitations and next test. Export the investigation as Markdown and save the original CSV plus run JSON. A result that leaves the useful threshold unresolved is a valid finding when reported honestly."
       ],
       "predict": "Can a valid CSV establish that rows came from independent, comparable experiments?",
-      "look": "The invented starter data do not establish a real improvement. Your conclusion must identify the source and experimental conditions of the actual evidence used.",
-      "change": "Import independently collected paired runs, change the useful threshold in your plan, and explain whether the interval resolves that decision. Keep every valid run.",
+      "look": "Find `Geometric mean A/B ratio` and `Approximate 95% t interval for A/B`. The percentage threshold is printed as a ratio for comparison with that interval. Use the input description to identify which data support your conclusion.",
+      "change": "Before collecting evidence, record the smallest useful percentage reduction under Question & useful threshold in the report. Set `minimum_reduction_pct` to that percentage in the editor, using a value from 0 up to but excluding 100. Choose a CSV of independent paired runs if you have one. Run Python, then compare `Approximate 95% t interval for A/B` with the required A/B ratio printed below it.",
       "question": "Your interval crosses both parity and your useful threshold. What is the honest finding?",
       "options": [
         "The useful improvement is proved.",
