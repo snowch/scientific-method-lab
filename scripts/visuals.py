@@ -50,9 +50,10 @@ def strip(w,alt,rows,domain,xlabel,vertical=()):
 def picture(index,w,ns,stdout):
  c=Canvas(w,'');caption='';title='See the reasoning';formula=None;legend=[]
  if index==1:
-  title='Make “faster” measurable';caption='Illustrative decision rule, not measured data: against a 100 ms reference, a 20% reduction requires a time of at most 80 ms. The workload and correct answers must stay the same.';formula=r'\mathrm{reduction}=100\,\frac{A-B}{A}\%'
+  threshold=ns['minimum_reduction_pct'];limit=100-threshold
+  title='Make “faster” measurable';caption=f'Illustrative decision rule, not measured data: against a 100 ms reference, a {threshold:g}% reduction requires a time of at most {limit:g} ms. The workload and correct answers must stay the same.';formula=r'\mathrm{reduction}=100\,\frac{A-B}{A}\%'
   L,R=34,w-30;scale=(R-L)/100
-  for y,val,label,k in [(84,100,'A · 100 ms reference',0),(188,80,'B · at most 80 ms',1)]:c.text(L,y-20,label,'start');c.rect(L,y,val*scale,40,'tile tile-'+str(k))
+  for y,val,label,k in [(84,100,'A · 100 ms reference',0),(188,limit,f'B · at most {limit:g} ms',1)]:c.text(L,y-20,label,'start');c.rect(L,y,val*scale,40,'tile tile-'+str(k))
   c.text(w/2,285,'same job · same correct result')
  elif index in (2,5,10,14,20,24,27):
   title={2:'Find where predictions diverge',5:'Compare observation with prediction',10:'Look for an interaction',14:'Order carries information',20:'More evidence, same effect',24:'One test versus a search',27:'Fit the shape, not just the slope'}[index]
@@ -130,7 +131,7 @@ def picture(index,w,ns,stdout):
   lo,hi,means,covered=[ns[k] for k in ['low','high','means','covered']]
   hits=np.flatnonzero(covered)[:3];misses=np.flatnonzero(~covered)[:3];selected=np.r_[hits,misses]
   title='What counts as covering?'
-  caption=f'{len(hits)} covering intervals and {len(misses)} misses selected from the seeded reference to illustrate the definition. This selected diagram must not be used to estimate frequency. Across all 500 independent normal-sample intervals, coverage was {covered.mean():.1%}. The population mean stays fixed at 100 ms.'
+  caption=f'{len(hits)} covering intervals and {len(misses)} misses selected from the seeded reference to illustrate the definition. Across all 500 independent normal samples, the {ns["confidence_level"]:.0%} procedure covered the true mean in {covered.mean():.1%} of runs. The population mean stays fixed at 100 ms.'
   c.h=420;L,R,T,B=58,w-28,48,340
   domain=(min(80,np.floor(lo[selected].min()/5)*5),max(120,np.ceil(hi[selected].max()/5)*5))
   X=lambda a:L+(a-domain[0])/(domain[1]-domain[0])*(R-L)
@@ -166,7 +167,7 @@ def picture(index,w,ns,stdout):
   group=ns['data'].groupby('environment').reduction_pct.mean();rows=[(str(label),min(0,v),max(0,v),v,0 if v>0 else 1) for label,v in group.items()];caption='Four invented pairs per environment. These are arithmetic means of within-pair percentage reductions. Opposite signs reveal a boundary hidden by pooling; no uncertainty or generalisation claim is established by this small table.'
   return dict(title='State where the effect holds',caption=caption,svg=strip(w,caption,rows,(-15,30),'Mean time reduction (%)',vertical=[0]))
  elif index==29:
-  return dict(title='Name the timed boundary',kind='boundary',caption='The reference diagram describes the published procedure, not timing results. Construction and query generation are outside the timer; both lookup methods must return the same hit count. All twelve blocks share one runtime and device, so independence is not established.')
+  return dict(title='Name the timed boundary',kind='boundary',caption=f'The reference diagram shows the published timing procedure. The timer covers the lookup loop. Construction and query generation happen before it. Both methods must return the same hit count. All {ns["block_count"]} blocks share one runtime and device, so independence needs a separate justification.')
  elif index==30:
   return dict(title='Keep the claim attached to its evidence',kind='evidence',caption='A report preserves the plan, source data, exact executed code, analysis and limits. Upload validation checks CSV structure, not the independence or provenance needed for inference. Invented starter values are not evidence of a real benefit.')
  else:raise ValueError(f'No visual for lesson {index}')

@@ -117,3 +117,13 @@
 @media(max-width:370px){.quiet-overview{padding:16px 12px 32px}.course-introduction.course-hero{padding:26px 20px 15px}.course-hero h1{font-size:2.2rem}.course-hero .overview-start a:not(.button){font-size:.9375rem}}
 
 .course-hero progress{appearance:none;height:6px;border:0;border-radius:6px;background:#526879}.course-hero progress::-webkit-progress-bar{background:#526879;border-radius:6px}.course-hero progress::-webkit-progress-value{background:#bad8cc;border-radius:6px}.course-hero progress::-moz-progress-bar{background:#bad8cc;border-radius:6px}
+
+.editor-help{margin:0;padding:8px 16px 0;color:#c5d3e9;font-size:.875rem}
+.lab-workspace .run-error[hidden],.editor-tools [hidden],.upload-panel #csv-status:empty{display:none}
+.run-error{padding:16px 24px;background:var(--surface-soft);border-bottom:1px solid var(--line)}
+.run-error h3,.run-error summary{font-size:1rem}
+.run-error p,#input-kind,#csv-status{overflow-wrap:anywhere}
+.run-error p{margin:4px 0 10px}
+.run-error pre{margin:0;max-height:300px;overflow:auto}
+@media(max-width:700px){.run-error{padding:16px}}
+.timing-setup{padding:10px 16px;border-top:1px solid #30405a}

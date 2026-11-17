@@ -301,3 +301,26 @@ focused hero/quiet-layout checks. Captured all three new heroes at
 320/390/820/1440px and checked 200% text and label bounds. Inspected phone and
 tablet/desktop compositions. Evidence is in test-results/hero-*.png; these are
 functional and author-design checks, not a learner study.
+
+## 2026-11-17 — experiment instructions and run recovery
+
+Reviewed the learner instructions and followed the revised activities in
+lessons 1, 17, 29 and 30. A single editable value now drives each threshold or
+interval-level comparison. The timing lesson identifies which settings to
+change, what to record, and which output fields to check. The recording cue sits
+above Run Python. The capstone keeps its independent-pair requirement visible
+beside the CSV picker and identifies the selected file and the file used for the
+last successful result.
+
+Restoring the example retains the most recently replaced draft for that lesson.
+The editor offers a keyboard path to run code, and a failed attempt appears
+separately from the previous result. A browser test deferred reading a CSV at
+390px and verified focus returned to the picker. A second failed capstone run
+preserved the last successful source and CSV input, including the CSV's final
+newline, in the run JSON and Markdown report.
+
+`npm run check` passed nine native tests, all 30 real-Wasm examples, and 1,496
+relative links and fragments across 32 pages. Chromium walkthroughs exercised
+the revised settings and timing boundary at 390px and 1280px and checked reflow
+in both themes. These checks establish that learners can complete the flow and
+inspect the intended evidence. No learner study measured understanding.
