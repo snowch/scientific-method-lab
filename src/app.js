@@ -5,6 +5,7 @@ import {attachEditor} from './editor.mjs';
 const root=new URL('.',import.meta.url);
 const $=id=>document.getElementById(id);
 const prefix='sml:v1:';
+const rich=text=>renderRich(text,tex=>katex.renderToString(tex,{displayMode:false,throwOnError:false,trust:false,strict:'warn'}));
 let storageAvailable=true;
 function get(key,fallback=''){
  try{return localStorage.getItem(prefix+key)??fallback}catch{storageAvailable=false;return fallback}
@@ -124,7 +125,6 @@ function initializeOverview({lessons}){
   $('import-progress').value='';
  });
 }
-const rich=text=>renderRich(text,tex=>katex.renderToString(tex,{displayMode:false,throwOnError:false,trust:false,strict:'warn'}));
 function initializeLesson(lesson){
  const slug=lesson.slug;
  const initialCode=$('code').value;

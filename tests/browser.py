@@ -275,6 +275,7 @@ try:
         assert '# saved draft' in (RESULTS/'downloaded.py').read_text()
         page.reload();page.wait_for_selector('html[data-ready=true]')
         assert page.locator('#notes').input_value()=='A note to preserve'
+        assert 'reasoning fits' in page.locator('#quiz-feedback').inner_text()
         assert page.locator('#prediction').input_value()=='My saved prediction'
         assert '# saved draft' in page.locator('#code').input_value()
         assert page.locator('#mark-read').is_checked()
