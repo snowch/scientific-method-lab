@@ -2,32 +2,32 @@
   "modules": [
     {
       "title": "Ask a better question",
-      "description": "Turn a broad claim into something evidence can challenge.",
+      "description": "Write a testable question and decide what would count as evidence.",
       "slug": "question"
     },
     {
       "title": "Design a fair test",
-      "description": "Separate the change you make from the things that change around it.",
+      "description": "Use controls, random order and paired comparisons to explain a difference.",
       "slug": "design"
     },
     {
       "title": "Read the observations",
-      "description": "Find the information a headline number leaves out.",
+      "description": "Check distributions, sampling, time order and missing observations.",
       "slug": "observe"
     },
     {
       "title": "Put uncertainty to work",
-      "description": "Estimate the size of a difference and how precisely you know it.",
+      "description": "Estimate how large a difference is and how much uncertainty remains.",
       "slug": "estimate"
     },
     {
       "title": "Challenge your conclusion",
-      "description": "Build a null model, then discover how analysis choices can mislead.",
+      "description": "Compare a result with a no-effect model and trace how analysis choices change the evidence.",
       "slug": "challenge"
     },
     {
       "title": "Make the evidence travel",
-      "description": "Test explanations, collect real measurements and publish a reproducible finding.",
+      "description": "Test other explanations, collect measurements and report how you reached a finding.",
       "slug": "share"
     }
   ],
@@ -43,8 +43,8 @@
         "These invented paired timings let you practise the arithmetic before collecting measurements. $A$ is the original version; $B$ is the changed version. Each row describes one comparison. A smaller $B$ time favours the change. Keep the denominator explicit: the proportional reduction is $(A-B)/A$."
       ],
       "predict": "Does a reduction from 100 ms to 85 ms meet a 20% target?",
-      "look": "Find `Reduction per pair (%)` and `Pairs meeting 20%` in the output. The dashed line marks the useful threshold. The count describes these invented pairs.",
-      "change": "Change `minimum_reduction_pct` from `20` to `10` and select Run Python again. Compare the reductions per pair, the count and the dashed line. Which changed?",
+      "look": "Find `Reduction per pair (%)` and `Pairs meeting 20%`. Which bars reach the dashed threshold, and how many do?",
+      "change": "In the Python editor, change `minimum_reduction_pct = 20` to `minimum_reduction_pct = 10`. Select Run Python again. Compare `Reduction per pair (%)`, the count labelled `Pairs meeting 10%` and the dashed line. Which changed?",
       "question": "A claim says “the new process is better”. Which question is directly testable?",
       "options": [
         "Does it finish a fixed job at least 15% sooner, with the same correct result?",
@@ -57,7 +57,7 @@
         "Name what you would record.",
         "Name the old and new conditions and the size of change that matters."
       ],
-      "limit": "These values are invented for arithmetic practice. They are not measurements of a cache or evidence of a real improvement.",
+      "limit": "The invented table records elapsed times only. A real comparison also needs a check that both versions return the same answers.",
       "source": [
         "NIST · Choosing an experimental design",
         "https://www.itl.nist.gov/div898/handbook/pri/section3/pri3.htm"
@@ -65,7 +65,9 @@
       "minutes": 5,
       "kind": "Invented data",
       "module": 0,
-      "code": "01-make-a-claim-testable.py"
+      "code": "01-make-a-claim-testable.py",
+      "takeaway": "Three of the five invented pairs meet 20%. The table supplies elapsed times. Checking correctness would also require comparing the answers each version returned.",
+      "plot": "Bars show the percentage reduction for five invented timing pairs. A dashed line marks the useful threshold."
     },
     {
       "slug": "predict-before-running",
@@ -75,11 +77,11 @@
       "explain": [
         "An explanation proposes why something happens. A prediction says what you expect to observe in stated conditions. A useful explanation can produce several predictions; observing one prediction does not prove that explanation is the only possible cause.",
         "Suppose a cache helps because requests repeat keys. Then the advantage should shrink as keys become less repetitive. A different explanation, that the new version saves a fixed setup cost, predicts a similar saving even when every key is unique.",
-        "The two lines below are authored models, not fitted measurements. A model is a deliberately simplified relationship. Vary the fraction of repeated keys and compare the predictions. Then choose a new condition where the explanations disagree most."
+        "A model is a deliberately simplified relationship. The prepared code gives the two models six repeat fractions from zero to one and calculates their expected savings. Both lines represent teaching assumptions."
       ],
       "predict": "Which explanation predicts a saving when the repeat fraction is zero?",
-      "look": "The lines agree near one setting and disagree elsewhere. A test at an agreement point tells you little about which explanation is better.",
-      "change": "Change the fixed saving to 30. Find an input that would still distinguish the explanations.",
+      "look": "Find 0 in `Repeat fractions`, then read the first entry in `Repeat model saving (ms)` and `Setup model saving (ms)`. Which explanation predicts a saving with no repeated keys?",
+      "change": "In the Python editor, replace `15.0` with `30.0` in `setup_model = np.full(6, 15.0)`. Select Run Python again. Use `Repeat fractions` and the two savings rows to find a fraction where the predictions differ. What could a measurement there distinguish?",
       "question": "Two explanations predict the same result for a small dataset. What is the most useful next test?",
       "options": [
         "Repeat only that small dataset until one explanation wins.",
@@ -100,7 +102,9 @@
       "minutes": 5,
       "kind": "Authored model",
       "module": 0,
-      "code": "02-predict-before-running.py"
+      "code": "02-predict-before-running.py",
+      "takeaway": "At zero repeat fraction the repeated-key explanation predicts no saving and the fixed-setup explanation predicts 15 ms. Where the lines are close, a noisy measurement has less power to distinguish them.",
+      "plot": "Predicted saving in milliseconds across six repeated-key fractions. The fixed-setup line stays at 15 ms while the repeated-key line rises from zero."
     },
     {
       "slug": "name-your-variables",
@@ -109,12 +113,12 @@
       "goal": "Separate the treatment, response and possible confounders in an experiment.",
       "explain": [
         "The treatment is the condition you deliberately assign, such as cache off or on. The response is the quantity you measure, such as elapsed milliseconds. Other variables may also affect the response: request count, machine load or input size.",
-        "A confounder varies with the treatment and also affects the outcome. If every cache-on run uses half the requests, a lower time could come from the smaller job. The treatment effect and workload difference are tangled together.",
+        "A factor can confuse a treatment comparison if it differs between treatment groups and also affects the outcome. If every cache-on run uses half the requests, a lower time could come from the smaller job.",
         "Inspect the invented table. Time per request helps reveal the unequal workloads, but dividing by request count does not automatically repair the design. Setup costs, queueing and different request mixes can make time per request change with workload. A fair follow-up holds the job fixed."
       ],
       "predict": "Will comparing total times be enough when request counts differ?",
-      "look": "The cache-on rows have lower total time and less work. Both facts matter. A normalised column is a diagnostic, not proof that the cache caused a reduction.",
-      "change": "Set every request count to 1000 while leaving the invented times fixed. Explain why editing a worksheet is not collecting a fair comparison.",
+      "look": "Compare the `requests`, `elapsed_ms` and `ms_per_request` columns for the rows where `cache` is off and on. Do the rows compare equal amounts of work?",
+      "change": "In the Python editor, replace the `requests` list `[1000, 1000, 500, 500]` with `[1000, 1000, 1000, 1000]`. Leave `elapsed_ms` unchanged and select Run Python again. Which of the two elapsed-time columns changes? Could the edited numbers count as new measurements?",
       "question": "All treatment runs use a new machine, while all control runs use an old machine. What can you estimate directly?",
       "options": [
         "The effect of treatment alone.",
@@ -135,11 +139,12 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 0,
-      "code": "03-name-your-variables.py"
+      "code": "03-name-your-variables.py",
+      "takeaway": "The on rows cover fewer requests. Dividing elapsed time by requests shows a per-request average. Setup costs or workload differences can still affect it."
     },
     {
       "slug": "check-your-instrument",
-      "title": "Is your ruler long enough?",
+      "title": "What does your timer miss?",
       "short": "Measurement can hide the difference you want to see.",
       "goal": "Explain how resolution and calibration affect a measured difference.",
       "explain": [
@@ -148,8 +153,8 @@
         "The example starts from invented reference durations and rounds them. Repeating a rounded reading cannot recover information the instrument never recorded. Timing a batch can help with resolution, but dividing batch time by operations estimates an average under that batching procedure, not each operation's latency."
       ],
       "predict": "Can two distinct reference durations produce the same displayed reading?",
-      "look": "Several different durations become indistinguishable. The offset example changes absolute values without changing pairwise differences.",
-      "change": "Reduce `resolution_ms` to 1. Then replace the constant offset with `[0, 1, 2, 3, 4, 5]`. Which comparisons remain trustworthy?",
+      "look": "Find 11, 12, 13 and 14 in `Reference (ms)` and compare their entries in `Displayed (ms)`. Then compare the gap between the first two reference times with the gap between their offset readings.",
+      "change": "In the Python editor, change `resolution_ms` from `10` to `1` and select Run Python. Compare `Displayed (ms)` with the first run. Next change `offset_ms = 5` to `offset_ms = np.array([0, 1, 2, 3, 4, 5])` and run again. Compare the gap between the first two entries in `Reference (ms)` and `With offset (ms)`. Does a varying offset preserve that gap?",
       "question": "A sensor consistently reads 2 °C too high. Repeating it 1,000 times will mainly do what?",
       "options": [
         "Remove the calibration offset.",
@@ -170,7 +175,8 @@
       "minutes": 5,
       "kind": "Authored instrument model",
       "module": 0,
-      "code": "04-check-your-instrument.py"
+      "code": "04-check-your-instrument.py",
+      "takeaway": "Four different reference durations round to 10 ms. A constant offset changes absolute times by 5 ms and leaves the gap between any two unrounded times unchanged."
     },
     {
       "slug": "a-result-that-challenges-you",
@@ -182,9 +188,9 @@
         "Suppose a model says saving depends only on repeated keys. It predicts no saving with unique keys. A reliable saving there would challenge that model. Before rejecting it, check whether keys really were unique and the measured boundary stayed the same.",
         "The invented observations below disagree with a simple model at zero repetition. A residual is an observation minus its model prediction. A pattern in residuals can suggest something the model leaves out. Revising a model is useful when the revision produces a new prediction you can test on fresh evidence."
       ],
-      "predict": "What residual would you expect at zero repetition if the model were adequate and measurement noise small?",
-      "look": "The residual is positive across the settings. A missing fixed saving is one explanation; a systematic measurement offset is another.",
-      "change": "Add a 12 ms fixed saving to the prediction. State a new experiment that distinguishes a real setup saving from a timer offset.",
+      "predict": "At zero repetition, how large should the residual be if the prediction is accurate and measurement noise is small?",
+      "look": "Find the first value in `Observed minus predicted (ms)`, which belongs to zero repetition. If the model predicted that setting well, how close to zero would you expect this difference to be?",
+      "change": "In the Python editor, change `prediction = 40 * repeat_fraction` to `prediction = 40 * repeat_fraction + 12`. Select Run Python again. How do the values in `Observed minus predicted (ms)` change? Describe a new measurement that could separate a real fixed saving from a timer offset.",
       "question": "One result contradicts a prediction. What should you do first?",
       "options": [
         "Delete it because it disagrees.",
@@ -205,7 +211,9 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 0,
-      "code": "05-a-result-that-challenges-you.py"
+      "code": "05-a-result-that-challenges-you.py",
+      "takeaway": "The original differences are all positive. A fixed saving or a timer offset could explain a gap even when no keys repeat.",
+      "plot": "Residual saving stays above zero across all five repeat fractions in the invented data."
     },
     {
       "slug": "find-a-control",
@@ -218,8 +226,8 @@
         "That calculation has assumptions. In particular, the control must represent the treated service's time trend without the treatment. Different demand shifts could violate this parallel-trends assumption. Earlier observations can challenge its plausibility, but cannot prove what the unobserved alternative would have been."
       ],
       "predict": "If both services improve equally, how large is the adjusted treatment difference?",
-      "look": "A negative change means lower elapsed time. The treated change includes a trend the control also experienced.",
-      "change": "Set `treated_after` to 100. Compare the unadjusted and adjusted claims.",
+      "look": "Compare `Treated change (ms)` with `Control change (ms)`. Which change is subtracted to get `Difference in changes (ms)`?",
+      "change": "In the Python editor, replace `treated_before, treated_after = 120, 90` with `treated_before, treated_after = 120, 100`. Select Run Python again. Compare the treated and control changes. Does `Difference in changes (ms)` still show an extra improvement?",
       "question": "A training programme starts just as an easier exam replaces the old exam. What comparison would help?",
       "options": [
         "Only the trainees’ old and new scores.",
@@ -240,7 +248,8 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 1,
-      "code": "06-find-a-control.py"
+      "code": "06-find-a-control.py",
+      "takeaway": "The treated service improves by 30 ms. The control improves by 20 ms. If the control represents the untreated trend, the treatment accounts for the extra 10 ms."
     },
     {
       "slug": "randomise-the-order",
@@ -253,8 +262,8 @@
         "Below, shuffle equal numbers of A and B. Inspect their positions against an invented time trend. Randomisation balances other influences in expectation over assignments, not perfectly in each small experiment. Record order and conditions so you can inspect remaining imbalance."
       ],
       "predict": "Will a balanced number of A and B runs guarantee equal average positions?",
-      "look": "Counts are balanced by construction. Positions can remain imbalanced by chance. Blocking adjacent comparisons is a separate design choice.",
-      "change": "Try seeds 7 and 19. Compare the position imbalance without selecting the seed that makes your preferred treatment look best.",
+      "look": "Count A and B in the `treatment` column, then compare `Mean position by treatment`. Does an equal number of runs give the treatments equal average positions?",
+      "change": "In the Python editor, change the `42` in `np.random.default_rng(42)` to `7` and select Run Python. Repeat with `19`. Compare `Mean position by treatment` and the `treatment` counts across all three runs. Does the treatment that ran later on average stay the same?",
       "question": "Why randomise which treatment goes first?",
       "options": [
         "To guarantee both measurements are identical.",
@@ -267,15 +276,16 @@
         "Think about a machine warming up over time.",
         "Ask which treatment receives the warm state if order never changes."
       ],
-      "limit": "This schedule randomises order, not machines or workloads. The deterministic time trend is a teaching model.",
+      "limit": "The code shuffles treatment order on one model schedule. A real experiment must also justify the choice of machine, workload and reset.",
       "source": [
         "NumPy · Random sampling",
         "https://numpy.org/doc/2.0/reference/random/index.html"
       ],
       "minutes": 6,
-      "kind": "Authored schedule and trend",
+      "kind": "Seeded schedule and invented timings",
       "module": 1,
-      "code": "07-randomise-the-order.py"
+      "code": "07-randomise-the-order.py",
+      "takeaway": "The schedule contains six of each treatment. One treatment can land later by chance, even though the scheduling rule favours neither treatment."
     },
     {
       "slug": "compare-within-blocks",
@@ -288,8 +298,8 @@
         "Pairing is a design decision, not a way to match convenient observations after seeing results. Randomise order within blocks, define the block before collecting data, and check for carryover: one treatment can change the state inherited by the next. A reset or washout may be needed."
       ],
       "predict": "Will between-machine variation disappear from each within-machine difference if the machine effect is additive?",
-      "look": "Lines show the pairing. A table of all A readings followed by all B readings would hide which observations belong together.",
-      "change": "Add 100 ms to both readings on M3. Compare the paired differences with the raw spread.",
+      "look": "Find the M3 row and compare `a_ms` with `b_ms`. What does its `b_minus_a` say about the two treatments on that machine?",
+      "change": "In the Python editor, add `pairs.loc[pairs.machine == \"M3\", [\"a_ms\", \"b_ms\"]] += 100` before the line starting `pairs[\"b_minus_a\"]`. Select Run Python again. Compare M3’s `a_ms`, `b_ms` and `b_minus_a` with the first run. Which values move, and which one keeps the same treatment comparison?",
       "question": "You measure each participant with both devices. Which comparison preserves the paired design?",
       "options": [
         "Compare device readings within each participant, then summarise those differences.",
@@ -310,7 +320,9 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 1,
-      "code": "08-compare-within-blocks.py"
+      "code": "08-compare-within-blocks.py",
+      "takeaway": "Each plotted line connects the two times from one machine. Subtracting A from B preserves that comparison even if the machines have different baseline speeds.",
+      "plot": "Five lines connect each machine’s A and B time. The gaps within each machine are smaller than the variation across machines."
     },
     {
       "slug": "count-the-real-units",
@@ -323,8 +335,8 @@
         "The simulated array has six sessions and twenty readings per session. Each session gets a shared random offset plus small reading noise. A standard error estimates how much an estimated mean would vary across repeated experiments. Compare one computed as if all readings were independent with one computed from session means. The relevant count depends on the question and assignment, not the file's row count."
       ],
       "predict": "Which calculation notices that an entire session can be unusually slow?",
-      "look": "The reading-level calculation treats shared session offsets as though each reading had a fresh offset. That is not how these data were generated.",
-      "change": "Increase readings per session from 20 to 200. Does that create more independent sessions?",
+      "look": "Find the two counts in `Sessions, readings/session`. Compare `SE assuming independent readings (ms)` with `SE across session means (ms)`. Which calculation uses one value from each session?",
+      "change": "In the Python editor, change `readings_per_session` from `20` to `200`. Select Run Python again. Compare the two counts and the two SE lines with the first run. Which count tells you how many independent sessions the model still contains?",
       "question": "A fertiliser is assigned to four plots, with 50 plants measured in each. How many independently assigned units are there?",
       "options": [
         "200 plants.",
@@ -345,7 +357,8 @@
       "minutes": 7,
       "kind": "Seeded simulation",
       "module": 1,
-      "code": "09-count-the-real-units.py"
+      "code": "09-count-the-real-units.py",
+      "takeaway": "The 120 readings come from six simulated sessions. The smaller reading-level error treats shared session variation as if each reading were independent."
     },
     {
       "slug": "two-things-at-once",
@@ -358,8 +371,8 @@
         "The four invented cells below illustrate the calculation. A real experiment needs randomised order and independent replication within these combinations to estimate uncertainty. Changing one factor at a time at a single setting of the other can miss an interaction entirely."
       ],
       "predict": "Can cache-on be slower for one workload and faster for another?",
-      "look": "The lines have different slopes. That is the interaction in this table; uncertainty about real effects would require repeated experiments.",
-      "change": "Change `on_ms` for the unique workload to 60. What happens to the difference of effects?",
+      "look": "In the table, find `cache_effect_ms` for each `workload`. Which workload gets faster with the cache? Find `Difference of effects (ms)` and check which effect the code subtracts.",
+      "change": "In the Python editor, find the `on_ms` list and change the first value from `110` to `60`. Select Run Python again. Compare `cache_effect_ms` and `Difference of effects (ms)`. Are the effects equal for both workloads now?",
       "question": "A material change helps at high temperature and hurts at low temperature. What should you report?",
       "options": [
         "Only the average benefit.",
@@ -380,7 +393,9 @@
       "minutes": 7,
       "kind": "Invented data",
       "module": 1,
-      "code": "10-two-things-at-once.py"
+      "code": "10-two-things-at-once.py",
+      "takeaway": "The cache adds 10 ms to unique-key work and saves 40 ms with repeated keys. The difference of the two effects is −50 ms, so a single average would hide a direction change.",
+      "plot": "Cache-on time rises for unique keys and falls for repeated keys in the invented table."
     },
     {
       "slug": "plot-before-summarising",
@@ -389,12 +404,12 @@
       "goal": "Distinguish datasets with the same mean but different distributions.",
       "explain": [
         "A distribution describes which values occur and how often. The arithmetic mean adds the values and divides by their count. It describes a centre, but says little on its own about spread, skew or unusual observations.",
-        "These invented services have the same mean time. One is consistent; the other alternates quick responses with a long delay. A customer who cares about waiting may prefer them differently despite the identical mean.",
-        "A dot plot places each observation on an axis. Here the vertical offset only separates overlapping marks; it is not another measured variable. The dashed line marks the mean. Keep units on the axis and inspect raw values before choosing a summary."
+        "Both invented services have the same mean time. A has five similar waits. B has four short waits and one long wait, which may matter to the customer.",
+        "A dot plot gives each observation a mark. The vertical offsets separate nearby marks. The dashed lines mark the group means."
       ],
       "predict": "Can equal means coexist with very different customer experiences?",
-      "look": "One long observation pulls B’s mean far from its typical reading. A median alone would hide that long wait too.",
-      "change": "Replace B’s final value with 110. Explain what changes in the mean, median and worst observed value.",
+      "look": "Compare `Means (ms)`, `Medians (ms)` and `Longest observed time (ms)`, each listed in A, B order. Would the means alone tell you which service contains a long delay?",
+      "change": "In the Python editor, replace the final `210` in `b` with `110`. Select Run Python again. Compare `Means (ms)`, `Medians (ms)` and `Longest observed time (ms)`. Which summaries show that one wait got shorter?",
       "question": "Two delivery services have equal mean delay. What should you inspect next?",
       "options": [
         "The distribution, long delays and how observations were collected.",
@@ -415,7 +430,9 @@
       "minutes": 5,
       "kind": "Invented data",
       "module": 2,
-      "code": "11-plot-before-summarising.py"
+      "code": "11-plot-before-summarising.py",
+      "takeaway": "Both means are 50 ms. Group B still includes a 210 ms wait, while all five A waits are near 50 ms.",
+      "plot": "A’s five waits sit near 50 ms. B has four waits of 10 ms and one wait of 210 ms. Both means are 50 ms."
     },
     {
       "slug": "describe-the-spread",
@@ -424,12 +441,12 @@
       "goal": "Explain the difference between standard deviation and standard error.",
       "explain": [
         "The sample standard deviation describes how widely individual observations vary around their mean. It uses the same units as the observations. A larger standard deviation means a wider spread, not necessarily a less precisely estimated mean if the sample is much larger.",
-        "For independent observations from a stable population with finite variance, the estimated standard error of the mean is $s/\\sqrt{n}$, where $s$ is the sample standard deviation and $n$ is the sample size. It estimates how much sample means would vary under repeated sampling.",
+        "The standard error estimates how much means from repeated samples would vary. With independent observations from a stable population with finite variance, divide the sample standard deviation by the square root of the sample size.",
         "The seeded simulations below draw different numbers of independent observations from the same normal distribution. Sampling variation means their sample standard deviations are not exactly equal. Standard error usually falls as sample size grows under this model, while individual observations remain variable."
       ],
       "predict": "Does collecting more observations make each individual observation less variable?",
-      "look": "SD describes observations; SE describes an estimator under a sampling model. Using SE bars to describe individual variation gives the wrong impression.",
-      "change": "Change the population spread from 15 to 30. Compare both SD and SE.",
+      "look": "Find the rows marked `n=10`, `n=100` and `n=1000`. Compare the `SD` and `SE` columns across sizes. Which one describes variation among observations?",
+      "change": "In the Python editor, change `population_sd_ms` from `15` to `30`. Select Run Python again. At each `n`, compare `SD` and `SE` with the first run. Does a more variable population make both quantities larger at the same sample size?",
       "question": "A report labels an error bar “±2”. What information is missing?",
       "options": [
         "Only its colour.",
@@ -450,7 +467,8 @@
       "minutes": 6,
       "kind": "Seeded simulation",
       "module": 2,
-      "code": "12-describe-the-spread.py"
+      "code": "12-describe-the-spread.py",
+      "takeaway": "The standard deviation describes the observations. The standard error describes how the mean would vary if you collected new samples. More observations here make the mean more precise while individual observations remain variable."
     },
     {
       "slug": "sampling-a-population",
@@ -463,8 +481,8 @@
         "The constructed population below has two groups with different elapsed times. Compare a convenience sample containing only the first group with a simple random sample from everyone. The random sample still has sampling error; it does not exactly reproduce the population mean on every draw."
       ],
       "predict": "Which sample can reveal that the slower group exists?",
-      "look": "The desktop-only sample misses a whole group. Its lack of within-sample variation is not evidence that the full population is uniform.",
-      "change": "Increase the convenience sample to 500. Does it become representative of mobile clients?",
+      "look": "Compare `Population mean (ms)`, `Desktop-only sample mean (ms)` and `Random sample mean (ms)`. Compare the mobile counts for the two samples. Which procedure includes mobile requests?",
+      "change": "In the Python editor, replace `convenience = population[:100]` with `convenience = population[:500]`. Select Run Python again. Find `Desktop-only sample size`, then compare `Mobile requests in desktop-only sample` and `Desktop-only sample mean (ms)` with the first run. Has the larger sample reached mobile requests?",
       "question": "A survey of museum visitors asks whether the whole town likes museums. What is the main concern?",
       "options": [
         "The sample may systematically overrepresent people who enjoy museums.",
@@ -485,7 +503,8 @@
       "minutes": 6,
       "kind": "Constructed population",
       "module": 2,
-      "code": "13-sampling-a-population.py"
+      "code": "13-sampling-a-population.py",
+      "takeaway": "Every desktop request in the model takes 40 ms. The population mean is 60 ms because the full population also includes mobile requests at 140 ms."
     },
     {
       "slug": "keep-the-time-order",
@@ -498,8 +517,8 @@
         "A trend does not identify its own cause. It tells you the stable-population assumption deserves scrutiny. Investigate conditions, block or randomise treatment order, and define warm-up rules before seeing which exclusions favour a treatment. Dropping early results after looking at them can create a new bias."
       ],
       "predict": "What would an A-first, B-second schedule make you conclude about this series?",
-      "look": "The difference between halves is real in these values; calling it a treatment effect would require evidence that order is not responsible.",
-      "change": "Alternate labels A and B across the same observations. Compare group means and explain why relabelling historical data is not a substitute for randomising a future test.",
+      "look": "Compare `Mean time for A (ms)` and `Mean time for B (ms)`. Look at how the time plot changes with run order. Which label gets the later, faster positions under the prepared schedule?",
+      "change": "In the Python editor, change `labels = np.repeat([\"A\", \"B\"], 6)` to `labels = np.tile([\"A\", \"B\"], 6)`. Select Run Python again. Compare `Mean time for A (ms)` and `Mean time for B (ms)`. Why does reassigning labels on paper answer a scheduling question without testing a real treatment?",
       "question": "A histogram looks symmetric, but the time plot shows a steady increase. Which statement is justified?",
       "options": [
         "Symmetry proves observations are independent.",
@@ -520,7 +539,9 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 2,
-      "code": "14-keep-the-time-order.py"
+      "code": "14-keep-the-time-order.py",
+      "takeaway": "The labels split a declining series. B has the lower mean because it gets later positions in these invented observations.",
+      "plot": "Elapsed times decline in the prepared sequence. A gets the first six positions and B gets the last six."
     },
     {
       "slug": "the-data-that-disappeared",
@@ -533,8 +554,8 @@
         "If you stop waiting at 200 ms, a timeout tells you the request took longer than that boundary or failed under that rule. Treating it as exactly 200 ms would add an assumption. Report successful, failed and unfinished counts, the timeout rule and the boundary of any timing summary. Different missing-data mechanisms need different analyses."
       ],
       "predict": "Will the default mean include the two timeout rows?",
-      "look": "The mean is conditional on having a recorded time. It cannot alone describe reliability or all offered requests.",
-      "change": "Replace missing values with zero and recompute. Explain why the improved number is an artefact of that replacement.",
+      "look": "Find `Offered requests` and `Outcome counts`. Compare the table’s `elapsed_ms` entries with `Mean among recorded times (ms)`. Which requests does that mean leave out?",
+      "change": "In the Python editor, change the final `data.elapsed_ms.mean()` to `data.elapsed_ms.fillna(0).mean()` and rename its printed label to `Mean treating timeouts as zero (ms)`. Select Run Python again. Compare that number and `Outcome counts` with the first run. Why did the mean fall without a change in outcomes?",
       "question": "A trial loses follow-up mainly among participants with severe symptoms. What is the concern?",
       "options": [
         "Deleting those participants may bias the outcome estimate.",
@@ -547,7 +568,7 @@
         "Ask whether missing and observed cases differ systematically.",
         "A larger complete-case sample does not reveal the missing outcomes."
       ],
-      "limit": "This lesson identifies the missingness problem; it does not teach survival analysis, imputation or bounds for censored observations.",
+      "limit": "The mean omits unrecorded times. Estimating time across all offered requests would need a method that accounts for the timeout rule.",
       "source": [
         "pandas · Missing data",
         "https://pandas.pydata.org/pandas-docs/version/2.2/user_guide/missing_data.html"
@@ -555,7 +576,8 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 2,
-      "code": "15-the-data-that-disappeared.py"
+      "code": "15-the-data-that-disappeared.py",
+      "takeaway": "The average uses only four recorded times. The other two requests timed out and contribute to the outcome counts, but supply no recorded time."
     },
     {
       "slug": "a-range-for-the-mean",
@@ -564,12 +586,12 @@
       "goal": "Construct and interpret a t confidence interval for a population mean.",
       "explain": [
         "An estimate from a sample changes when the sample changes. A confidence interval is built by a procedure intended to cover a target population quantity at a stated rate over repeated sampling under its assumptions.",
-        "For independent observations from a normal population, a t interval for the mean is $\\bar{x}\\pm t^*s/\\sqrt{n}$: sample mean plus or minus a t critical value times the estimated standard error. With sufficiently regular larger samples, it can also approximate other populations. Small, strongly skewed samples need particular care. The degrees of freedom supplied to SciPy are $n-1$, accounting for estimating the mean when computing sample spread.",
+        "A t interval starts at the sample mean and extends by a margin in either direction. The margin is the estimated standard error multiplied by a value that depends on the sample size and chosen confidence level. The procedure has its stated coverage for independent observations from a normal population. With bigger samples it can also work approximately for some other populations.",
         "The target here is the population mean elapsed time, not the time of the next request. A 95% confidence procedure does not say that 95% of observations lie in the interval. After the interval is computed, frequentist coverage is a property of the procedure, not a probability assigned to the fixed population mean."
       ],
       "predict": "Should this interval contain nearly every individual reading?",
-      "look": "The interval for a mean and the range of observations describe different quantities. Narrow uncertainty about the mean can coexist with wide individual variation.",
-      "change": "Change .95 to .99. Explain why asking for higher coverage makes the interval wider on the same data.",
+      "look": "Compare the two endpoints in `95% t interval for population mean (ms)` with `Observed range (ms)`. Which line describes uncertainty about a mean rather than individual times?",
+      "change": "In the Python editor, change `confidence_level = 0.95` to `confidence_level = 0.99`. Select Run Python again. Subtract the lower endpoint from the upper one for each of the 95% and 99% intervals. What happens to interval width and `Observed range (ms)`?",
       "question": "A 95% confidence interval for mean height is 169–171 cm. Which interpretation fits?",
       "options": [
         "95% of people have heights between 169 and 171 cm.",
@@ -590,7 +612,8 @@
       "minutes": 7,
       "kind": "Invented data",
       "module": 3,
-      "code": "16-a-range-for-the-mean.py"
+      "code": "16-a-range-for-the-mean.py",
+      "takeaway": "The known observations span 97 to 104 ms. The interval addresses the unknown population mean. With the same observations, higher confidence requires a wider interval."
     },
     {
       "slug": "watch-intervals-repeat",
@@ -602,8 +625,8 @@
         "The simulation draws independent normal samples with population mean 100 ms. Each sample creates a new 95% t interval. An interval covers when its lower end is no greater than 100 and its upper end is no less. A miss does not by itself show the implementation is broken; misses are part of the procedure.",
         "The fraction covering 100 fluctuates because the simulation itself is finite. The plot shows only the first thirty intervals; colour and an x marker identify misses. Increasing simulation count estimates the method's coverage more precisely under this model. It does not validate the model for your measurements."
       ],
-      "predict": "Should all thirty plotted intervals cross the true mean?",
-      "look": "The procedure produces both hits and misses. Once observed, an interval either contains this fixed mean or does not; we usually do not know which for real data.",
+      "predict": "Would you expect every interval in the first 30 to contain the true mean?",
+      "look": "Find `Coverage fraction` and `Mean interval width (ms)`. The plot shows the first 30 intervals. Is the fraction based on those 30 or the full count in `Intervals`?",
       "change": "Change `confidence_level` from `0.95` to `0.99` and select Run Python again. Compare `Coverage fraction` and `Mean interval width (ms)` with the first run. Both runs use the same seeded samples.",
       "question": "You run 100 valid experiments using a 95% confidence procedure. Must exactly 95 intervals cover the mean?",
       "options": [
@@ -625,7 +648,9 @@
       "minutes": 7,
       "kind": "Seeded simulation",
       "module": 3,
-      "code": "17-watch-intervals-repeat.py"
+      "code": "17-watch-intervals-repeat.py",
+      "takeaway": "The fraction counts all 500 samples. The first 30 in this seeded plot happen to cover the true mean. The reference illustration deliberately selects examples of both outcomes, so it cannot show how often they occur.",
+      "plot": "The first 30 intervals from the seeded simulation all happen to cross the 100 ms true mean."
     },
     {
       "slug": "bootstrap-the-right-unit",
@@ -634,12 +659,12 @@
       "goal": "Bootstrap a mean difference while preserving its independent units.",
       "explain": [
         "A bootstrap approximates sampling variation by repeatedly sampling observed units with replacement, keeping the original sample size. With replacement means a unit can appear more than once in a resample. Recalculate the statistic for every resample.",
-        "Here each value is the B-minus-A difference from one independent paired run. Resampling differences preserves the pairs. We use SciPy's basic bootstrap interval, a construction based on bootstrap deviations from the observed estimate. Different interval methods have different behaviour.",
+        "Here each value is the B-minus-A difference from one independent paired run. Resampling differences preserves those pairs. SciPy offers several ways to turn the resampled means into an interval. Compare three methods on the same invented data. Each uses the same number of resamples and seed.",
         "A bootstrap is not assumption-free. The observed units must represent the sampling process and target population; the sample needs enough information about the statistic. It cannot repair systematic selection bias, invent unseen tail events or turn correlated readings into independent experiments. The seed makes this particular simulation reproducible."
       ],
       "predict": "If you have eight run differences, how many values belong in each bootstrap resample?",
-      "look": "The statistic is the mean paired difference, and the resampling unit is an independent run difference. Changing either changes the question.",
-      "change": "Change `method=\"basic\"` to `method=\"percentile\"` and then `\"BCa\"`. Compare the results without choosing a method solely because its interval is more favourable.",
+      "look": "Find `Mean B-minus-A (ms)`, `95% basic bootstrap interval (ms)` and `Bootstrap SE (ms)`. Use the reference illustration to see how the resample can contain eight entries while repeating run IDs.",
+      "change": "In the Python editor, change `bootstrap_method = \"basic\"` to `bootstrap_method = \"percentile\"` and select Run Python. Repeat with `\"BCa\"`. Compare the endpoints in the interval line for each named method and the `Mean B-minus-A (ms)`. Which changes when the interval method changes?",
       "question": "A dataset has 12 independently treated classrooms and 20 pupils per classroom. What must a suitable resampling plan preserve?",
       "options": [
         "The classroom clusters and treatment design.",
@@ -660,7 +685,8 @@
       "minutes": 7,
       "kind": "Invented data",
       "module": 3,
-      "code": "18-bootstrap-the-right-unit.py"
+      "code": "18-bootstrap-the-right-unit.py",
+      "takeaway": "Each resample has eight entries, chosen from the eight original paired-run differences. An interval method uses the variation between those resampled means in a particular way."
     },
     {
       "slug": "useful-is-not-just-nonzero",
@@ -669,12 +695,12 @@
       "goal": "Compare an estimated proportional improvement and its interval with a prespecified useful threshold.",
       "explain": [
         "An effect size describes the magnitude of a difference. A 2 ms reduction can be decisive for one task and irrelevant for another. Decide the minimum useful benefit from the decision context, before looking at the results.",
-        "For each paired run below, calculate $\\log(A/B)$, the natural logarithm of the time ratio. The exponential function $\\exp$ reverses this transformation. Logs treat reciprocal ratios symmetrically. A t interval for the mean log ratio can be transformed back with $\\exp$ to describe a geometric mean $A/B$ time ratio. This is not a ratio of arithmetic means.",
+        "Each paired run gives a time ratio A/B. The code takes the natural log of each ratio, finds their mean and applies the exponential function to return to the ratio scale. The result is the geometric mean ratio. Transforming the two t interval endpoints the same way gives an interval for that quantity.",
         "An $A/B$ ratio above $1$ favours B. A 20% time reduction means $B/A\\le0.8$, so $A/B\\ge1.25$. An interval that lies above $1$ but crosses $1.25$ supports a positive benefit under the model, while leaving the useful threshold unresolved. Failure to resolve a threshold is not proof of no useful effect."
       ],
-      "predict": "Does an A/B ratio of 1.20 mean B takes 20% less time?",
-      "look": "The ratio interval and useful threshold answer different questions. The central estimate alone is insufficient to establish a minimum benefit.",
-      "change": "Multiply every B time by .9. Compare the interval with 1 and with 1.25.",
+      "predict": "If A takes 120 ms and B takes 100 ms, how much time does B save as a fraction of A’s time?",
+      "look": "Compare `95% t interval for A/B ratio` with 1 (equal times) and with `Ratio needed for a 20% reduction`. Does the interval only support a positive improvement, or does it also clear the useful threshold?",
+      "change": "In the Python editor, add `b = b * 0.9` before `log_ratio = np.log(a / b)`. Select Run Python again. Compare the lower endpoint of `95% t interval for A/B ratio` with 1 and 1.25. Does it now clear the useful threshold?",
       "question": "An interval for A/B is 1.05–1.15. The required ratio is 1.25. What does it support?",
       "options": [
         "The useful threshold has been established.",
@@ -695,7 +721,8 @@
       "minutes": 7,
       "kind": "Invented data",
       "module": 3,
-      "code": "19-useful-is-not-just-nonzero.py"
+      "code": "19-useful-is-not-just-nonzero.py",
+      "takeaway": "The prepared interval lies above 1 and includes values below 1.25. The model supports faster B times while leaving a 20% minimum benefit unresolved."
     },
     {
       "slug": "plan-how-much-evidence",
@@ -704,13 +731,13 @@
       "goal": "Explain how sample size, variation and effect size affect detection probability.",
       "explain": [
         "A null hypothesis is a statistical reference claim, here that the population mean difference is zero. A hypothesis test compares an observed statistic, such as a sample mean, with what a specified model predicts under that claim. Its decision rule can reject the null when the statistic is sufficiently extreme.",
-        "Power is the probability that a specified test rejects its null when a particular alternative model is true. It depends on sample size, effect, variation and the decision rule. Here a two-sided t test compares a mean with zero; two-sided means departures in either direction can count. Its p-value is a tail probability under the null model, not the probability the null is true. The next module builds this mechanism in detail.",
+        "Power is the chance a specified test detects an effect of a particular size under a given sampling model. The test here detects differences on either side of zero. It calls a result a detection when its p-value, the probability of results at least this extreme under the no-effect model and test assumptions, is below 0.05.",
         "This simulation asks how often that test detects a 3 ms shift with independent normal differences of standard deviation 10 ms. Rejecting at p<0.05 is a prespecified simulation rule, not a truth threshold. Each row repeats whole experiments at one fixed sample size.",
         "Choose the effect that matters and a precision or power goal before collecting real data. A noisy pilot’s estimated effect can be optimistic. Sensitivity analysis over plausible effects and variation gives a more honest plan than one exact-looking count."
       ],
       "predict": "Will a larger sample make a tiny effect more practically useful?",
-      "look": "A larger sample can increase detection of the specified effect. It does not make the effect larger, fix bias or guarantee detection in one experiment.",
-      "change": "Try `effect_ms=0`, then `1`, then `6`. Under zero, the detection fraction estimates a false-positive rate rather than power for a nonzero effect.",
+      "look": "Compare `Simulated detection fraction` across the three sample sizes, labelled `n`. The generator keeps the effect at 3 ms and standard deviation at 10 ms. Does a larger sample change the effect itself or the chance of detecting it?",
+      "change": "In the Python editor, replace `effect_ms, sd_ms = 3, 10` with `effect_ms, sd_ms = 0, 10` and select Run Python. Repeat with `1, 10` and `6, 10`. At `n=100`, compare `Simulated detection fraction` for the three effects. What does the fraction count when the true effect is zero?",
       "question": "A study fails to reject zero with a small sample. Which conclusion follows?",
       "options": [
         "The effect is exactly zero.",
@@ -731,7 +758,8 @@
       "minutes": 7,
       "kind": "Seeded simulation",
       "module": 3,
-      "code": "20-plan-how-much-evidence.py"
+      "code": "20-plan-how-much-evidence.py",
+      "takeaway": "More independent observations make a mean easier to distinguish from zero under this model. When the effect is zero, detections are false positives."
     },
     {
       "slug": "build-a-null-world",
@@ -744,8 +772,8 @@
         "Compare the observed statistic with this null distribution. For a two-sided test based on absolute mean difference, values at least as far from zero count as extreme. The fraction estimates a tail probability under this specified model. It is not the probability that the null hypothesis is true."
       ],
       "predict": "Under a zero-mean model, must every sample mean be zero?",
-      "look": "The statistic varies even when the model has no mean effect. Surprise depends on the spread and the sample size in that model.",
-      "change": "Move `observed_mean` from -5 to -1. Then increase the model standard deviation. Which changes make the observation less surprising?",
+      "look": "Find `Fraction at least as extreme`. The histogram shows differences from simulated experiments with no mean effect. Why can some simulated means lie as far from zero as −5 ms?",
+      "change": "In the Python editor, change `observed_mean = -5.0` to `observed_mean = -1.0` and select Run Python. Then change `noise_sd_ms` from `10` to `20` and run again. Compare `Fraction at least as extreme` after each change. Which change moves the observed value and which spreads out the reference?",
       "question": "A null model assumes independent observations. If your observations share session-level noise, what is the concern?",
       "options": [
         "The reference distribution may be wrong for the data collection process.",
@@ -766,7 +794,9 @@
       "minutes": 6,
       "kind": "Seeded null simulation",
       "module": 4,
-      "code": "21-build-a-null-world.py"
+      "code": "21-build-a-null-world.py",
+      "takeaway": "The simulated means vary from sample to sample even with a population mean of zero. Both tails count because this comparison uses distance from zero.",
+      "plot": "A histogram of 5,000 means simulated under zero effect. Vertical lines mark the two thresholds at equal distance from zero."
     },
     {
       "slug": "shuffle-under-the-null",
@@ -774,13 +804,13 @@
       "short": "A permutation test must respect the design.",
       "goal": "Run a paired randomisation test without breaking the experimental blocks.",
       "explain": [
-        "In a paired randomised experiment, A and B can be assigned to two positions within each block. Under a sharp no-treatment-effect null, swapping their labels within a block would not change the underlying outcomes. That assignment mechanism generates a reference distribution.",
+        "In a paired randomised experiment, the order of A and B is chosen separately in each block. The sharp no-effect claim says that changing a label would leave each individual outcome unchanged. If that holds, swapping labels within each block gives the possible results of the assignment procedure.",
         "SciPy’s `samples` permutation mode swaps the treatment labels while preserving pairs. The statistic here is $\\operatorname{mean}(B-A)$. We enumerate all assignments for these eight invented pairs: $2^8=256$ label patterns. This differs from shuffling all sixteen readings together.",
-        "The randomisation interpretation relies on the actual within-block assignment and no interference or carryover that invalidates it. For observational paired data, a label-swap test instead needs an appropriate exchangeability or symmetry argument. A software option does not supply that argument."
+        "This interpretation requires that the label swaps match how the experiment was assigned and that one treatment does not affect the next. An observational study would need its own reason for treating the two labels in each pair as exchangeable."
       ],
       "predict": "What information would be lost by shuffling all readings across all machines?",
-      "look": "The pairs remain intact. SciPy forms a two-sided p-value by doubling the smaller one-sided tail probability, capped at one.",
-      "change": "Make B worse than A in two blocks by changing the corresponding B values. Explain how the evidence changes without reordering pairs.",
+      "look": "Find `Exact assignment patterns` and `Two-sided permutation p-value`. What stays together in every pattern, even when an A and a B label swap?",
+      "change": "In the Python editor, change the first two entries of `b` from `72, 119` to `90, 140`. Select Run Python again. Compare `Mean B-minus-A (ms)`, `Exact assignment patterns` and `Two-sided permutation p-value`. How do the two larger B times change the evidence without changing the pairing?",
       "question": "In a randomised paired trial, which label permutation respects assignment?",
       "options": [
         "Shuffle every observation without regard to pairs.",
@@ -801,7 +831,8 @@
       "minutes": 7,
       "kind": "Invented data",
       "module": 4,
-      "code": "22-shuffle-under-the-null.py"
+      "code": "22-shuffle-under-the-null.py",
+      "takeaway": "The test enumerates 256 within-pair label patterns. Each pattern changes labels only inside a pair, which respects this assignment model."
     },
     {
       "slug": "what-a-p-value-says",
@@ -814,8 +845,8 @@
         "The simulation holds the true effect and variation fixed while increasing sample size. Inspect the estimated means as well as the p-values. A decision still needs magnitude, uncertainty, design quality and practical consequences. The ASA statement linked below explains why a threshold alone is not a scientific conclusion."
       ],
       "predict": "Can a 0.2 ms effect become statistically distinguishable with a large enough sample?",
-      "look": "The practical effect in the generator is unchanged. The test becomes more sensitive to it as the independent sample grows.",
-      "change": "Set `effect_ms` to `.02`. State a useful threshold before deciding whether any detected difference matters.",
+      "look": "Compare `mean` and `p` across the rows labelled `n`. Does the estimate need to become practically larger for `p` to become smaller?",
+      "change": "In the Python editor, change `effect_ms = .2` to `effect_ms = .02`. Select Run Python again. Compare `mean` and `p`, especially at the largest `n`. How small a difference would be useful, regardless of what the p-value says?",
       "question": "A report gives p=0.03. Which interpretation is defensible?",
       "options": [
         "There is a 3% probability the null is true.",
@@ -836,7 +867,8 @@
       "minutes": 6,
       "kind": "Seeded simulation",
       "module": 4,
-      "code": "23-what-a-p-value-says.py"
+      "code": "23-what-a-p-value-says.py",
+      "takeaway": "The p-value can fall as sample size increases even when the generator keeps its effect fixed. Judge the observed size of the effect against a useful threshold."
     },
     {
       "slug": "twenty-chances-to-win",
@@ -849,8 +881,8 @@
         "The simulation uses independent normal metrics with no mean effect. A Bonferroni rule compares each p-value with $0.05/m$ to control the probability of any false rejection at no more than $0.05$ when the individual tests are valid, even without independence. Prespecify a primary outcome, report the search and treat discoveries as candidates for fresh confirmation."
       ],
       "predict": "Will twenty independent null tests produce at least one p<0.05 in only 5% of experiments?",
-      "look": "The unadjusted search is a different procedure from one prespecified test. The simulation and formula describe independent metrics, while the Bonferroni bound is broader.",
-      "change": "Change m to 1 and then 50. Keep the number of simulated experiments fixed and compare the fractions.",
+      "look": "Compare `Any p<0.05 fraction` with `Independent-test formula`. Then compare both with `Any Bonferroni rejection fraction`. Which rule accounts for checking several metrics?",
+      "change": "In the Python editor, change `m = 20` to `m = 1` and select Run Python. Repeat with `m = 50`. Compare the three printed fractions. How does checking more metrics affect the chance of any false alarm under each rule?",
       "question": "You inspect 40 outcomes and report the only one with p<0.05. What must the report disclose?",
       "options": [
         "Only the selected p-value.",
@@ -871,7 +903,8 @@
       "minutes": 7,
       "kind": "Seeded simulation",
       "module": 4,
-      "code": "24-twenty-chances-to-win.py"
+      "code": "24-twenty-chances-to-win.py",
+      "takeaway": "Searching across 20 metrics yields many more false alarms than a single test under this model. Bonferroni uses a stricter cutoff for each test."
     },
     {
       "slug": "stop-when-it-looks-good",
@@ -881,11 +914,11 @@
       "explain": [
         "A stopping rule says when data collection ends. A fixed-sample test evaluates the result after a planned sample size. Recomputing the same conventional p-value repeatedly and stopping as soon as it falls below 0.05 changes the false-positive behaviour.",
         "The simulation has no mean effect. Compare one test at the final sample size with the rule 'report success if any of these interim tests crosses 0.05'. The interim tests share observations and are dependent, so the independent-test formula from the previous lesson does not apply.",
-        "Sequential designs can permit planned interim decisions while controlling error rates, but need methods built for that procedure. This lesson does not implement one. Prespecify a fixed count for the course investigations; record incomplete or interrupted runs and any deviations instead of quietly extending collection until the result looks favourable."
+        "This example compares two rules on the same simulated data. For a planned experiment, choose a final count or a method that accounts for interim decisions. Record interruptions and changes to the plan."
       ],
       "predict": "Can dependent interim checks still inflate the chance of at least one threshold crossing?",
-      "look": "The data-generating model is identical for both rules. The different decision procedures produce different false-positive behaviour.",
-      "change": "Replace looks with `[100]`, then `list(range(10, 101, 10))`. Explain why the latter is not ten independent tests.",
+      "look": "Compare `Fixed final-test rejection fraction` with `Any interim crossing fraction`. Both use the same simulated observations. Which rule gives itself more chances to claim a discovery?",
+      "change": "In the Python editor, replace `looks = [20, 40, 60, 80, 100]` with `looks = [100]` and select Run Python. Then use `looks = list(range(10, 101, 10))` and run again. Compare `Any interim crossing fraction` with `Fixed final-test rejection fraction`. Why do the ten checks share observations?",
       "question": "A team adds ten more observations whenever p is above 0.05 and stops at the first success. What is the issue?",
       "options": [
         "The conventional fixed-sample interpretation no longer matches the procedure.",
@@ -906,7 +939,8 @@
       "minutes": 7,
       "kind": "Seeded simulation",
       "module": 4,
-      "code": "25-stop-when-it-looks-good.py"
+      "code": "25-stop-when-it-looks-good.py",
+      "takeaway": "The interim rule can count an early threshold crossing even if the final test does not reject. Its checks reuse observations."
     },
     {
       "slug": "association-is-a-clue",
@@ -916,11 +950,11 @@
       "explain": [
         "Association means the distribution of one variable differs with another. Correlation is one numerical description of how two quantities vary together. A strong correlation alone does not show that changing one will change the other.",
         "In this simulation, background load increases both queue length and response time. Queue length has no causal role in the generator: both variables receive the same load input plus independent noise. Yet their correlation can be large.",
-        "This does not mean correlations are useless. They can support prediction and suggest hypotheses. For a causal question, state what intervention you mean, consider common causes, reverse direction and selection, and design evidence that distinguishes them. A randomised intervention can break some of those alternative links when it is well executed."
+        "Correlations can support prediction and suggest explanations. To ask about cause, say what you would change directly. Consider whether a shared cause, the reverse direction or the way cases were selected could explain the same pattern."
       ],
       "predict": "Could queue length and response time correlate even when neither causes the other in the generator?",
-      "look": "The code lets you inspect the common cause directly. Real observational data rarely reveal every relevant common cause so clearly.",
-      "change": "Increase noise in the queue equation. Does a weaker correlation prove the common load disappeared?",
+      "look": "Read `Observed correlation` and compare it with how the points change colour across the plot. Which variable changes both queue length and response time in the model?",
+      "change": "In the Python editor, replace `rng.normal(0, 1, len(load))` in the `queue` assignment with `rng.normal(0, 8, len(load))`. Select Run Python again. Compare `Observed correlation` and the horizontal spread in the plot. Does a weaker correlation mean the code removed the effect of load?",
       "question": "Ice-cream sales and swimming rescues rise together. What explanation should you investigate?",
       "options": [
         "Ice cream necessarily causes swimming accidents.",
@@ -941,7 +975,9 @@
       "minutes": 6,
       "kind": "Seeded causal model",
       "module": 5,
-      "code": "26-association-is-a-clue.py"
+      "code": "26-association-is-a-clue.py",
+      "takeaway": "The generator gives load a role in both outcomes. Queue length has no direct effect on response time here, despite their strong correlation.",
+      "plot": "Queue length and response time increase together. Point colour shows that background load increases with both."
     },
     {
       "slug": "a-model-that-misses",
@@ -954,8 +990,8 @@
         "Model revision should lead to a test on fresh data or held-out conditions. Extrapolation means predicting beyond the tested input range; it is especially vulnerable to a wrong relationship. Include uncertainty, inspect assumptions and compare predictions with actual observations where the decision will be made."
       ],
       "predict": "Where will a straight-line fit struggle with a curved relationship?",
-      "look": "Residuals change sign in a pattern. Their shape matters more for model adequacy than whether the fitted slope differs from zero.",
-      "change": "Fit only the first five sizes and predict size 10. Then compare that extrapolation with the known authored value.",
+      "look": "Find `Residuals (ms)` and follow their signs from the smallest to largest size. What does a repeatable change from positive to negative and back say about the straight-line fit?",
+      "change": "In the Python editor, change `fit_count = 10` to `fit_count = 5`. Select Run Python again. Compare `Prediction at size 10 (ms)` with `Authored time at size 10 (ms)`. Did fitting the smaller sizes improve the prediction at a size it has not seen?",
       "question": "A linear fit has a nonzero slope but curved residuals. What is the useful next step?",
       "options": [
         "Treat the slope test as proof the line is adequate.",
@@ -976,7 +1012,9 @@
       "minutes": 7,
       "kind": "Authored model",
       "module": 5,
-      "code": "27-a-model-that-misses.py"
+      "code": "27-a-model-that-misses.py",
+      "takeaway": "The straight line captures the increase but leaves curved residuals. The model can fit the overall direction and still miss the response at sizes that matter.",
+      "plot": "Residuals are positive at both ends of the size range and negative in the middle for the fitted line."
     },
     {
       "slug": "replicate-and-revise",
@@ -989,8 +1027,8 @@
         "A replication should state which parts of the original procedure stay fixed and which change. A close repeat tests stability under similar conditions. A deliberate change in device, population or workload probes generalisation. Report disagreements, inspect implementation and measurement differences, then revise the claim to match the evidence rather than averaging away a meaningful boundary."
       ],
       "predict": "If both environments have equal numbers of runs, could a pooled mean hide the direction change?",
-      "look": "The pooled value depends on the mix of environments. A conditional finding gives the next experiment a clearer target.",
-      "change": "Duplicate every phone row. Observe how the pooled mean changes even though neither environment’s values changed.",
+      "look": "Compare `Mean reduction (%) by environment` with `Pooled mean reduction (%)`. Does the pooled number show that the direction differs between laptop and phone?",
+      "change": "In the Python editor, add `data = pd.concat([data, data[data.environment == \"phone\"]], ignore_index=True)` before `data[\"reduction_pct\"]` is assigned. Select Run Python again. What changes in the pooled mean and in the environment means? Why did the number of genuine observations stay the same?",
       "question": "A colleague reruns your saved script on your saved CSV and gets the same output. What has that established?",
       "options": [
         "The code-and-data calculation is reproducible in their tested setup.",
@@ -1011,7 +1049,8 @@
       "minutes": 6,
       "kind": "Invented data",
       "module": 5,
-      "code": "28-replicate-and-revise.py"
+      "code": "28-replicate-and-revise.py",
+      "takeaway": "The mean reduction favours B on laptop and A on phone in the invented rows. The pooled estimate depends on how much weight each environment gets."
     },
     {
       "slug": "collect-a-real-comparison",
@@ -1020,12 +1059,12 @@
       "goal": "Collect and export a paired timing record with correctness checks and explicit boundaries.",
       "explain": [
         "Now collect real elapsed times. Compare membership checks in a Python list and a set using the same integers and queries. Both must return the same hit count. A is the list; B is the set. The clock measures only the lookup loop, excluding construction and query generation.",
-        "The code uses a monotonic performance counter, checks one unmeasured warm-up for each method and randomises order within each pair of lookups. It records the order and both elapsed times in one row per pair. These blocks share a Python runtime and a device. To study variation between sessions, repeat the whole experiment in separate sessions.",
-        "Run the code with the tab visible. Record your device and use Export run to keep the exact code and elapsed times."
+        "Before starting the timer, the code runs the lookup task once per method to check that both return the same count. In each timed pair it shuffles which method goes first and records both times. These pairs share one Python runtime on one device. Separate sessions are needed to study variation between sessions.",
+        "Run the code with this tab visible. Record your device, then use Export run in the result tools to keep the exact code and times."
       ],
       "predict": "Which costs would a one-off job need to include that this lookup-only timer excludes?",
-      "look": "Find `a_ms` for list lookups and `b_ms` for set lookups. Both times cover the lookup loop. The worked times came from the build environment. Compare within each pair when judging your threshold.",
-      "change": "Try a separate comparison that includes set construction. Inside the timer, replace `answer = lookup(containers[name])` with `answer = lookup(set(values) if name == \"B\" else containers[name])`. Update the printed timing description to say that B includes set construction. Run Python again and compare `b_ms` with your first result. The queries and hit-count check still define the same work.",
+      "look": "Use `run_id` and `order` to identify each pair. Compare `a_ms` (list) and `b_ms` (set) within each row. Which work falls inside the timer? The published example output comes from a different machine.",
+      "change": "In the Python editor, change `include_set_construction = False` to `include_set_construction = True`. Select Run Python again. Check that the `MEASURED` line names the new boundary. Compare `b_ms` with your first run. Which work did you add for B, and what check still keeps the lookup task equivalent?",
       "question": "You export twelve blocks from one browser session. What is a justified scope statement?",
       "options": [
         "These are twelve independently sampled customer deployments.",
@@ -1046,7 +1085,8 @@
       "minutes": 8,
       "kind": "Measured at execution",
       "module": 5,
-      "code": "29-collect-a-real-comparison.py"
+      "code": "29-collect-a-real-comparison.py",
+      "takeaway": "The original timer covers the lookup loop after construction. Each pair uses the same queries and code checks both methods return the same number of hits. These pairs share one session."
     },
     {
       "slug": "publish-your-investigation",
@@ -1057,11 +1097,11 @@
         "Your final investigation combines a question, a prospective plan, observations and an analysis. Write the plan before collecting new evidence: treatment, response, useful threshold, experimental unit, randomisation, reset, count and exclusion rules. Record later deviations as deviations.",
         "The published example starts with invented paired timings. Use Choose CSV to supply your own pairs. The checks beside that control describe the required file structure. You still need to justify the source and independence of the rows.",
         "The analysis estimates a geometric mean A/B ratio and an approximate 95% t interval on log ratios. Use it only when its independence and distribution assumptions fit your plan. If your imported rows are correlated blocks from the previous lesson, collect independent sessions or use an appropriate hierarchical analysis before making that inference. A descriptive report is still useful when assumptions are unresolved.",
-        "Use the report fields below to explain the question, method, data source, findings, limitations and next test. Export the investigation as Markdown and save the original CSV plus run JSON. A result that leaves the useful threshold unresolved is a valid finding when reported honestly."
+        "Use the report fields to explain the question, method, data source, findings, limitations and next test. After export, keep the original CSV and the run JSON with the report."
       ],
       "predict": "Can a valid CSV establish that rows came from independent, comparable experiments?",
-      "look": "Find `Geometric mean A/B ratio` and `Approximate 95% t interval for A/B`. The percentage threshold is printed as a ratio for comparison with that interval. Use the input description to identify which data support your conclusion.",
-      "change": "Before collecting evidence, record the smallest useful percentage reduction under Question & useful threshold in the report. Set `minimum_reduction_pct` to that percentage in the editor, using a value from 0 up to but excluding 100. Choose a CSV of independent paired runs if you have one. Run Python, then compare `Approximate 95% t interval for A/B` with the required A/B ratio printed below it.",
+      "look": "Find `Geometric mean A/B ratio` and `Approximate 95% t interval for A/B`. Compare the interval with 1 (equal times) and the required ratio in the line below. Check the `INPUT` line to see which data produced the result.",
+      "change": "For the practice run, change `minimum_reduction_pct = 20` to `minimum_reduction_pct = 10` in the Python editor. Select Run Python again with the same invented input. Compare the required A/B ratio and the interval with the first run. For your own investigation, record the threshold under Question & useful threshold before collecting data, enter it in the editor and choose your CSV.",
       "question": "Your interval crosses both parity and your useful threshold. What is the honest finding?",
       "options": [
         "The useful improvement is proved.",
@@ -1082,7 +1122,8 @@
       "minutes": 9,
       "kind": "Invented data",
       "module": 5,
-      "code": "30-publish-your-investigation.py"
+      "code": "30-publish-your-investigation.py",
+      "takeaway": "Changing the useful threshold changes the minimum ratio you need for the decision. The interval still describes the timing pairs and depends on their sampling assumptions."
     }
   ]
 }

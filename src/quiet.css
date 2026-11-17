@@ -127,3 +127,15 @@
 .run-error pre{margin:0;max-height:300px;overflow:auto}
 @media(max-width:700px){.run-error{padding:16px}}
 .timing-setup{padding:10px 16px;border-top:1px solid #30405a}
+
+.experiment-prep{margin-bottom:12px}
+.lab-workspace>.observation{padding:0 24px;margin:20px 0 12px}
+.example-takeaway{line-height:1.65;margin:12px 0 0}
+#run-tools summary{cursor:pointer;padding:6px 0}
+#run-tools[hidden],.save-note[hidden],.save-note:empty{display:none}
+.hints ol{padding-left:26px}
+.hints li{line-height:1.7;margin-bottom:8px}
+.report-field-help{display:block;font-size:var(--type-detail);line-height:1.6;font-weight:400}
+#code,#report{scroll-margin-top:8px}
+@media(max-width:700px){.lab-workspace>.observation{padding:0 14px}}
+@media(max-width:370px){#code,#report{scroll-margin-top:42px}}

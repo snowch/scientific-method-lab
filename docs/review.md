@@ -324,3 +324,9 @@ relative links and fragments across 32 pages. Chromium walkthroughs exercised
 the revised settings and timing boundary at 390px and 1280px and checked reflow
 in both themes. These checks establish that learners can complete the flow and
 inspect the intended evidence. No learner study measured understanding.
+
+## 2026-11-17 — full learner-facing review
+
+The [opening and closing copy audit](copy-audit.md) records the full rubric check
+for all 30 investigations, the shared interface and notes, the literal edits and
+expected evidence, and the distinction between functional and learning evidence.

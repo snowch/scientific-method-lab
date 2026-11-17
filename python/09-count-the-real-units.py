@@ -2,7 +2,8 @@
 # Seeded simulation. See the lesson for assumptions and interpretation.
 import numpy as np
 rng = np.random.default_rng(31)
-readings = 100 + rng.normal(0, 12, (6, 1)) + rng.normal(0, 1, (6, 20))
+readings_per_session = 20
+readings = 100 + rng.normal(0, 12, (6, 1)) + rng.normal(0, 1, (6, readings_per_session))
 session_means = readings.mean(axis=1)
 naive_se = readings.std(ddof=1) / np.sqrt(readings.size)
 block_se = session_means.std(ddof=1) / np.sqrt(len(session_means))

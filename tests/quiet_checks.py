@@ -28,7 +28,7 @@ def check_quiet_layout(browser,root,base,lessons):
             tools=page.locator('#editor-tools')
             tools.locator(':scope > summary').click();assert page.locator('#restore').is_visible()
             page.keyboard.press('Escape');assert not tools.evaluate('e=>e.open')
-            assert page.evaluate('document.activeElement.textContent')=='Tools'
+            assert page.evaluate('document.activeElement.textContent')=='Editor tools'
             if width==820:
                 page.locator('#course-menu-toggle').click();assert page.locator('#course-sidebar').is_visible()
                 page.keyboard.press('Escape');assert not page.locator('#course-sidebar').is_visible()
@@ -59,5 +59,18 @@ def check_quiet_layout(browser,root,base,lessons):
     assert reader.locator('#storage-error').is_visible()
     assert 'storage is unavailable' in reader.locator('#storage-error').inner_text()
     assert reader.locator('#run').is_enabled()
+    reader.locator('#lesson-notes summary').press('Enter')
+    reader.locator('#notes').fill('Work that can remain only in this tab')
+    assert 'open on this page only' in reader.locator('#save-note').inner_text()
+    reader.locator('#mark-read').press('Space')
+    assert not reader.locator('#mark-read').is_checked()
+    assert 'could not save the reading mark' in reader.locator('#read-status').inner_text()
+    reader.goto(base);reader.wait_for_selector('html[data-ready=true]')
+    downloads=[]
+    reader.on('download',lambda file:downloads.append(file))
+    reader.locator('.portable-progress summary').press('Enter')
+    reader.locator('#export-progress').press('Enter')
+    assert 'Progress was not exported' in reader.locator('#progress-status').inner_text()
+    assert not downloads
     blocked.close()
     print('PASS quiet default states, 820/1024px tablet/sidebar layouts, optional tools, module search and deep links.',flush=True)

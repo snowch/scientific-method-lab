@@ -4,11 +4,14 @@ import contextlib, json, math, os, re, subprocess, sys, time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from quiet_checks import check_quiet_layout
+from learner_edits import EDITS
 ROOT=Path(__file__).resolve().parents[1]
 COURSE=json.loads((ROOT/'src/course.json').read_text())
 LESSONS=COURSE['lessons']
 RESULTS=ROOT/'test-results';RESULTS.mkdir(exist_ok=True)
-BASE='http://127.0.0.1:5174/scientific-method-lab/'
+PORT=os.environ.get('SML_TEST_PORT','5174')
+ORIGIN=f'http://127.0.0.1:{PORT}/'
+BASE=ORIGIN+'scientific-method-lab/'
 
 def visit(page,url):
     page.goto(url)
@@ -29,10 +32,11 @@ def restore_example(page):
 
 def download(page,selector,path):
     if selector=='#download-code':open_optional(page,'editor-tools')
+    if selector=='#export-run':open_optional(page,'run-tools')
     with page.expect_download() as info:page.locator(selector).click()
     info.value.save_as(path)
 
-server=subprocess.Popen([sys.executable,'-m','http.server','5174','--bind','127.0.0.1','--directory',str(ROOT/'.preview')],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+server=subprocess.Popen([sys.executable,'-m','http.server',PORT,'--bind','127.0.0.1','--directory',str(ROOT/'.preview')],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 try:
     import urllib.request
     for _ in range(50):
@@ -43,7 +47,7 @@ try:
         browser=p.chromium.launch(executable_path=None if os.environ.get('CI') else os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
         context=browser.new_context(viewport={'width':1440,'height':1000},accept_downloads=True)
         # No third-party request should be needed for fonts, code, plots or runtime.
-        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith('http://127.0.0.1:5174/') or route.request.url.startswith(('data:','blob:')) else route.abort())
+        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(ORIGIN) or route.request.url.startswith(('data:','blob:')) else route.abort())
         page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         visit(page,BASE)
         assert page.locator('.lesson-row').count()==30
@@ -67,11 +71,9 @@ try:
         page.locator('#search').fill('')
         page.evaluate("localStorage.setItem('sml:v1:read:make-a-claim-testable','true')")
         visit(page,BASE)
-        assert page.locator('#start-label').inner_text()=='Continue learning'
+        assert page.locator('#start-label').inner_text()=='Continue to the next unread lesson'
         assert page.locator('#start-course').get_attribute('href')=='lessons/'+LESSONS[1]['slug']+'.html'
-        # Execute all published sources in one worker. Each run has a fresh
-        # namespace; this also checks isolation without paying 30 import costs.
-        # Every actual page is checked independently below at narrow widths.
+        # Follow the published example and literal edits on each lesson page.
         visit(page,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
         assert not page.locator('#run-result').is_visible()
         assert not page.locator('#stop').is_visible()
@@ -88,21 +90,29 @@ try:
         assert page.locator('#code').evaluate('el=>getComputedStyle(el).lineHeight')==page.locator('.code-gutter').evaluate('el=>getComputedStyle(el).lineHeight')
         assert page.locator('#code-editor').evaluate("el=>el.classList.contains('is-highlighted')")
         assert page.locator('#code-highlight .token-keyword').count()>0
-        for i,lesson in enumerate(LESSONS):
+        assert len(LESSONS)==len(EDITS)
+        worked=json.loads((ROOT/'.cache/worked.json').read_text())['lessons']
+        for i,(lesson,variants) in enumerate(zip(LESSONS,EDITS,strict=True)):
+            visit(page,BASE+'lessons/'+lesson['slug']+'.html')
             source=(ROOT/'python'/lesson['code']).read_text()
-            page.locator('#code').fill(source)
+            editor=page.locator('#code')
+            assert editor.input_value()==source
+            assert page.locator('.experiment-prep').is_visible()
+            assert page.locator('.observation',has_text='What to compare').is_visible()
+            assert page.locator('.change-task').is_visible()
+            assert not page.locator('.lab-workspace .worked').evaluate('el=>el.open')
             assert page.locator('#code-highlight code').text_content()==source+'\n'
             page.locator('#run').click();wait_result(page)
             actual=page.locator('#output').inner_text()
             assert len(actual)>10
             if i!=28:
-                native=json.loads((ROOT/'.cache/worked.json').read_text())['lessons'][lesson['slug']]['stdout'].strip()
+                native=worked[lesson['slug']]['stdout'].strip()
                 # Floating formatting across native and Wasm may differ at last digits.
                 a_nums=re.findall(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?',actual)
                 b_nums=re.findall(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?',native)
                 assert len(a_nums)==len(b_nums),(lesson['slug'],actual,native)
                 for a,b in zip(a_nums,b_nums):assert math.isclose(float(a),float(b),rel_tol=2e-4,abs_tol=2e-4),(lesson['slug'],a,b)
-            native_record=json.loads((ROOT/'.cache/worked.json').read_text())['lessons'][lesson['slug']]
+            native_record=worked[lesson['slug']]
             assert page.locator('#plots img').count()==len(native_record['figures'])
             assert page.locator('#plots picture source[media="(max-width:700px)"]').count()==len(native_record['figures'])
             if i==0:
@@ -112,13 +122,35 @@ try:
                 assert page.locator('.lab-workspace .worked').count()==1
                 assert page.locator('#plots a').get_attribute('href').startswith('blob:')
                 page.screenshot(path=str(RESULTS/'lesson-desktop.png'),full_page=True)
-            page.locator('#mark-read').check()
-            print(f'PASS Wasm {i+1:02d}: {lesson["slug"]}',flush=True)
-        # Follow the new settings in the learner-facing activities.
+            original_provenance=page.locator('#output-provenance').inner_text()
+            assert 'published example' in original_provenance
+            if i!=28:
+                assert page.locator('#example-takeaway').is_visible()
+            for replacements,expected in variants:
+                edited=source
+                for before,after in replacements:
+                    assert edited.count(before)==1,(lesson['slug'],before)
+                    edited=edited.replace(before,after)
+                page.locator('#back-to-editor').press('Enter')
+                assert page.evaluate('document.activeElement.id')=='code'
+                editor.fill(edited)
+                page.locator('#run').press('Enter');wait_result(page)
+                revised=page.locator('#output').inner_text()
+                assert revised!=actual,(lesson['slug'],revised)
+                assert all(text in revised for text in expected),(lesson['slug'],revised,expected)
+                assert 'edited code' in page.locator('#output-provenance').inner_text()
+                assert not page.locator('#example-takeaway').is_visible()
+                assert not page.locator('#run-error').is_visible()
+            # Leave the persisted editor unchanged so later recovery starts from a known state.
+            restore_example(page)
+            print(f'PASS original and {len(variants)} documented edit(s) on route {i+1:02d}: {lesson["slug"]}',flush=True)
+        # Check additional numerical relationships and plot labels on the lesson routes.
+        visit(page,BASE+'lessons/'+LESSONS[0]['slug']+'.html')
         page.locator('#code').fill(initial_code.replace('minimum_reduction_pct = 20','minimum_reduction_pct = 10'))
         page.locator('#run').press('Enter');wait_result(page)
         assert 'Pairs meeting 10%: 5' in page.locator('#output').inner_text()
         assert 'Useful threshold (10%)' in page.locator('#plots img').evaluate('img=>fetch(img.src).then(r=>r.text())')
+        visit(page,BASE+'lessons/'+LESSONS[16]['slug']+'.html')
         for level in ('0.95','0.99'):
             source=(ROOT/'python'/LESSONS[16]['code']).read_text().replace('confidence_level = 0.95','confidence_level = '+level)
             page.locator('#code').fill(source)
