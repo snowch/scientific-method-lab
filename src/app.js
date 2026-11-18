@@ -5,6 +5,7 @@ import {attachEditor} from './editor.mjs';
 const root=new URL('.',import.meta.url);
 const $=id=>document.getElementById(id);
 const prefix='sml:v1:';
+const rich=text=>renderRich(text,tex=>katex.renderToString(tex,{displayMode:false,throwOnError:false,trust:false,strict:'warn'}));
 let storageAvailable=true;
 function get(key,fallback=''){
  try{return localStorage.getItem(prefix+key)??fallback}catch{storageAvailable=false;return fallback}
@@ -12,10 +13,13 @@ function get(key,fallback=''){
 function put(key,value){
  try{localStorage.setItem(prefix+key,String(value));return true}catch{
   storageAvailable=false;
-  const target=$('storage-error')||$('status')||$('save-note')||$('progress-status');
-  if(target){target.hidden=false;target.textContent='Browser storage is unavailable or full. Download your code or export a run/report before leaving.';}
   return false;
  }
+}
+function showStorageError(message){
+ const target=$('storage-error');
+ target.hidden=false;
+ if(target.textContent!==message)target.textContent=message;
 }
 function download(name,body,type='application/json'){
  const url=URL.createObjectURL(new Blob([body],{type}));
@@ -38,7 +42,7 @@ if(demo){
  for(const mode of ['runs','means'])$('demo-'+mode).addEventListener('click',()=>{
   demo.dataset.view=mode;
   for(const option of ['runs','means'])$('demo-'+option).setAttribute('aria-pressed',String(option===mode));
-  $('demo-caption').textContent=mode==='means'?'Both means are 50 ms. The individual waits are hidden.':'Each dot is one run. One long wait disappears inside the average.';
+  $('demo-caption').textContent=mode==='means'?'Both means are 50 ms. Open Every run to see which service has the long wait.':'Each dot is one run. One long wait disappears inside the average.';
  });
 }
 const menu=$('course-menu-toggle'),sidebar=$('course-sidebar');
@@ -49,7 +53,7 @@ if(menu&&sidebar){
  matchMedia('(min-width: 961px)').addEventListener('change',event=>{if(event.matches)close()});
 }
 const course=await fetch(new URL('course.json',root),{cache:'no-cache'}).then(response=>{if(!response.ok)throw new Error('Course data could not load. Please reload.');return response.json()}).catch(error=>{
- const target=$('status')||$('progress-status');if(target)target.textContent=error.message;return null;
+ const target=$('status')||$('progress-status');if(target)target.textContent=$('status')?'The experiment controls did not load. Reload or open Published example output.':'The course controls did not load. Reload or use the lesson links.';return null;
 });
 if(course){
  updateReadMarks();
@@ -63,16 +67,13 @@ function initializeOverview({lessons}){
   const read=lessons.filter(l=>get('read:'+l.slug)==='true').length;
   $('progress-count').textContent=`${read} / ${lessons.length} read`;
   $('course-progress').value=read;
-  if(read){
-   $('progress-title').textContent=read===lessons.length?'A course read. More questions ahead.':'Your investigation continues.';
-   $('progress-text').textContent='Reading marks record progress, not mastery. Your drafts stay on this browser.';
-   const next=lessons.find(l=>get('read:'+l.slug)!=='true');
-   if(next){$('start-course').href='lessons/'+next.slug+'.html';$('start-label').textContent='Continue learning'}
-  }
+  const next=lessons.find(l=>get('read:'+l.slug)!=='true');
+  $('start-course').href=next?'lessons/'+next.slug+'.html':'#course';
+  $('start-label').textContent=read?(next?'Continue to the next unread lesson':'Review course contents'):'Start lesson 1';
   updateReadMarks();
  }
  progress();
- if(!storageAvailable)$('progress-status').textContent='Browser storage is unavailable. Use exports to keep your work.';
+ if(!storageAvailable)$('progress-status').textContent='This browser blocked access to saved progress.';
  const modules=[...document.querySelectorAll('.module')];
  const savedOpen=new Map();let searching=false;
  const revealModule=()=>{const id=decodeURIComponent(location.hash.slice(1));const module=document.getElementById(id);if(module?.classList.contains('module'))module.open=true};
@@ -93,9 +94,17 @@ function initializeOverview({lessons}){
  });
  $('export-progress').addEventListener('click',()=>{
   const data={};
-  try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key.startsWith(prefix))data[key.slice(prefix.length)]=localStorage.getItem(key)}}catch{}
+  try{
+   for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key?.startsWith(prefix))data[key.slice(prefix.length)]=localStorage.getItem(key);
+   }
+  }catch{
+   $('progress-status').textContent='Progress was not exported because this browser blocked access to saved work.';
+   return;
+  }
   download('scientific-method-lab-progress.json',JSON.stringify({course:'scientific-method-lab',schema:1,exported_at:new Date().toISOString(),data},null,2));
-  $('progress-status').textContent='Exported saved reading marks, attempts and drafts. Run results and CSV inputs require their own exports.';
+  $('progress-status').textContent='Downloaded the work saved in this browser. Download run results separately from the lesson.';
  });
  $('import-progress').addEventListener('change',async()=>{
   const file=$('import-progress').files[0];if(!file)return;
@@ -111,12 +120,11 @@ function initializeOverview({lessons}){
     if(extra.length||!slugs.has(slug)||typeof value!=='string'||value.length>300_000||!((type==='read'&&!field&&(value==='true'||value==='false'))||(type==='draft'&&fields.has(field))))throw new Error('Progress file contains an invalid record. Nothing has been imported.');
    }
    let saved=0;for(const[key,value]of entries)if(put(key,value))saved++;
-   progress();$('progress-status').textContent=saved===entries.length?`Imported ${saved} saved records. Matching records in this browser were replaced.`:'Some records could not be saved. Export your work and check browser storage.';
+   progress();$('progress-status').textContent=saved===entries.length?`Imported ${saved} saved records. Matching records in this browser were replaced.`:`Saved ${saved} of ${entries.length} imported records. The remaining records are still in your import file.`;
   }catch(error){$('progress-status').textContent=error.message}
   $('import-progress').value='';
  });
 }
-const rich=text=>renderRich(text,tex=>katex.renderToString(tex,{displayMode:false,throwOnError:false,trust:false,strict:'warn'}));
 function initializeLesson(lesson){
  const slug=lesson.slug;
  const initialCode=$('code').value;
@@ -133,18 +141,41 @@ function initializeLesson(lesson){
  document.querySelectorAll('[data-save]').forEach(el=>{
   el.value=get(draftKey(el.dataset.save));
   if(el.value&&el.closest('details')&&el.id!=='code')el.closest('details').open=true;
-  el.addEventListener('input',()=>put(draftKey(el.dataset.save),el.value));
+  if(el.id==='notes'&&el.value&&storageAvailable)showNoteStatus(true);
+  el.addEventListener('input',()=>{
+   const saved=put(draftKey(el.dataset.save),el.value);
+   if(el.id==='notes')showNoteStatus(saved);
+   else if(!saved)showStorageError('This browser could not save your latest edits. They are still open on this page.');
+  });
  });
- if(!storageAvailable){$('storage-error').hidden=false;$('storage-error').textContent='Browser storage is unavailable. Download your code or export a run/report before leaving.';}
- $('mark-read').checked=get('read:'+slug)==='true';
- $('mark-read').addEventListener('change',()=>{put('read:'+slug,$('mark-read').checked);updateReadMarks()});
+ function showNoteStatus(saved){
+  const note=$('save-note');
+  note.hidden=false;
+  const message=saved?'Notes saved in this browser.':'Latest notes are open on this page only.';
+  if(note.textContent!==message)note.textContent=message;
+ }
+ const read=$('mark-read');
+ read.checked=get('read:'+slug)==='true';
+ if(!storageAvailable)showStorageError('Browser storage is unavailable. This page can still run Python.');
+ read.addEventListener('change',()=>{
+  if(put('read:'+slug,read.checked)){
+   $('read-status').textContent='';
+   updateReadMarks();
+  }
+  else{
+   read.checked=!read.checked;
+   $('read-status').textContent='This browser could not save the reading mark.';
+  }
+ });
  function stale(){
   if(!lastSuccessfulRun)return;
   const changed=$('code').value!==lastSuccessfulRun.source || csv!==lastSuccessfulRun.input_csv || csvName!==lastSuccessfulRun.input_name;
   const message=busy?'A new run is in progress. This result is from the last successful run.':changed
    ?'Code or input changed. This result and its export use the last successful run.'
-   :`Last successful run at ${new Date(lastSuccessfulRun.executed_at).toLocaleTimeString()}.`;
-  const input=$('csv-upload')?` CSV for this result · ${lastSuccessfulRun.input_name||'none supplied'}.`:'';
+   :lastSuccessfulRun.source===initialCode&&lastSuccessfulRun.input_csv===null
+    ?'Last successful run used the published example.'
+    :lastSuccessfulRun.source===initialCode?'Last successful run used the published code.':'Last successful run used your edited code.';
+  const input=$('csv-upload')?` Input for this result: ${lastSuccessfulRun.input_name||'invented starter data'}.`:'';
   $('output-provenance').textContent=message+input;
   $('output-provenance').classList.toggle('stale',changed||busy);
  }
@@ -161,16 +192,18 @@ function initializeLesson(lesson){
   }
   $('code').value=code;
   refreshEditor();
-  if(canSave)put(draftKey('code'),code);
+  const saved=canSave&&put(draftKey('code'),code);
+  if(!saved)showStorageError('This browser could not save the editor change. Use Download Python in Editor tools to keep the open code.');
   $('saved-draft').hidden=true;
   updateRecovery();
   stale();
   $('editor-tools').open=false;
   $('code').focus();
+  return saved;
  }
  updateRecovery();
  $('code').addEventListener('input',()=>{
-  put(draftKey('code'),$('code').value);
+  if(!put(draftKey('code'),$('code').value))showStorageError('This browser could not save your latest code. Use Download Python in Editor tools to keep a copy.');
   updateRecovery();
   stale();
  });
@@ -178,15 +211,20 @@ function initializeLesson(lesson){
   if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();if(!busy)run()}
  });
  $('restore').addEventListener('click',()=>{
-  showCode(initialCode);
+  const saved=showCode(initialCode);
   $('status').textContent=recoverableDraft===null
-   ?'Published code is ready. Select Run Python.'
-   :'Published code is ready. To get your draft back, use Recover draft in Tools.';
+   ?'Published code is open in the editor.'
+   :saved?'Published code is open. Use Recover draft in Editor tools to get your code back.':'Published code is open. Recover draft can bring your code back while this page stays open.';
  });
  $('recover-draft').addEventListener('click',()=>{
   if(recoverableDraft===null)return;
-  showCode(recoverableDraft);
-  $('status').textContent='Draft recovered. Select Run Python to run this code.';
+  const saved=showCode(recoverableDraft);
+  $('status').textContent=saved?'Recovered draft is open in the editor.':'Recovered draft is open on this page only.';
+ });
+ $('back-to-editor').addEventListener('click',event=>{
+  event.preventDefault();
+  $('code').focus({preventScroll:true});
+  $('code').scrollIntoView({block:'start',behavior:'instant'});
  });
  $('download-code').addEventListener('click',()=>download(slug+'.py',$('code').value,'text/x-python'));
  $('export-run').addEventListener('click',()=>{
@@ -217,7 +255,7 @@ function initializeLesson(lesson){
   $('run-error').hidden=false;
   stale();
  }
- $('stop').addEventListener('click',()=>terminate('Stopped. No result was saved for the cancelled run. Run again to restart Python.'));
+ $('stop').addEventListener('click',()=>terminate('Stopped. Select Run Python to start a new Python session.'));
  async function run(){
   if(busy||readingCsv)return;
   const source=$('code').value,input=csv,inputName=csvName,runRevision=++revision;
@@ -234,38 +272,39 @@ function initializeLesson(lesson){
    terminate('Python could not finish. Check the message, then edit or run again.');
    showRunError(message,inputName);
   };
-  timer=setTimeout(()=>fail('Python initialization exceeded two minutes. Check your connection and run again.'),120000);
+  timer=setTimeout(()=>fail('Python took more than two minutes to load. Check your connection, then select Run Python again.'),120000);
   if(!worker){try{worker=new Worker(new URL('worker.js',root))}catch(error){fail(error.message);return}}
   worker.onerror=event=>fail(event.message||'The Python worker could not load.');
   worker.onmessage=({data})=>{
    if(runRevision!==revision)return;
    if(data.type==='running'){
     clearTimeout(timer);$('status').textContent='Running your Python…';
-    timer=setTimeout(()=>fail('Execution exceeded 45 seconds and was stopped. Reduce the work or fix a loop, then run again.'),45000);return;
+    timer=setTimeout(()=>fail('Python stopped after 45 seconds. Check for a loop or reduce the work, then select Run Python again.'),45000);return;
    }
    if(data.type==='error'){fail(data.message);return}
    if(data.type!=='result')return;
    clearTimeout(timer);controls(false);
    const {stdout,error,figures,figures_narrow=[],versions}=data.value;
    if(error){
-    $('status').textContent='Python reported an error. Edit the code and run again.';
+    $('status').textContent='Python reported an error. Check the error message below.';
     showRunError(error,inputName,stdout);
     return;
    }
    $('run-result').hidden=false;
    lastSuccessfulRun={schema:1,course:'scientific-method-lab',lesson:slug,executed_at:new Date().toISOString(),source,input_csv:input,input_name:inputName,stdout,error:null,figures_svg_base64:figures,figures_narrow_svg_base64:figures_narrow,versions,environment:{user_agent:navigator.userAgent,timing_scope:'Local browser Pyodide; see executed source for boundaries.'}};
-   $('output').textContent=stdout||'No text was printed.';
+   $('output').textContent=stdout||'This run printed no text.';
    clearPlots();
    $('plots').replaceChildren(...figures.map((svg,i)=>{
     const figure=document.createElement('figure');figure.className='worked-figure';
     const picture=document.createElement('picture');
-    const image=document.createElement('img');image.className='plot';image.src=svgUrl(svg);image.alt=`Plot ${i+1} from your actual Python execution. Read its labelled axes and the text output together.`;
+    const image=document.createElement('img');image.className='plot';image.src=svgUrl(svg);image.alt=source===initialCode&&lesson.plot&&i===0?lesson.plot:`Plot ${i+1} from this Python run`;
     if(figures_narrow[i]){const source=document.createElement('source');source.media='(max-width:700px)';source.srcset=svgUrl(figures_narrow[i]);picture.append(source)}
     picture.append(image);const caption=document.createElement('figcaption'),link=document.createElement('a');
     link.href=image.src;link.target='_blank';link.rel='noopener';link.textContent='Open full-size figure ↗';caption.append(link);figure.append(picture,caption);return figure;
    }));
-   $('status').textContent='Completed. Inspect the output, then change one thing.';
-   $('export-run').disabled=false;$('export-run').hidden=false;stale();
+   $('status').textContent='Completed.';
+   $('example-takeaway').hidden=source!==initialCode||input!==null||slug==='collect-a-real-comparison';
+   $('run-tools').hidden=false;stale();
   };
   worker.postMessage({source,csv:input});
  }
@@ -274,21 +313,33 @@ function initializeLesson(lesson){
  let quizAttempt=null;
  try{quizAttempt=JSON.parse(initialQuiz)}catch{}
  if(quizAttempt&&Number.isInteger(quizAttempt.answer)&&quizAttempt.answer>=0&&quizAttempt.answer<lesson.options.length){
-  const choice=document.querySelector(`input[name=answer][value="${quizAttempt.answer}"]`);if(choice)choice.checked=true;
+  const choice=document.querySelector(`input[name=answer][value="${quizAttempt.answer}"]`);
+  if(choice){choice.checked=true;showAnswer(quizAttempt.answer);}
  }
- $('quiz').addEventListener('submit',event=>{
-  event.preventDefault();const selected=document.querySelector('input[name=answer]:checked');
-  if(!selected){$('quiz-feedback').textContent='Choose an answer first, then check your reasoning.';return}
-  const answer=Number(selected.value),correct=answer===lesson.correct;
-  put(draftKey('quiz'),JSON.stringify({answer,correct,at:new Date().toISOString()}));
+ function showAnswer(answer){
+  const correct=answer===lesson.correct;
   const feedback=$('quiz-feedback');feedback.replaceChildren();feedback.classList.toggle('incorrect',!correct);
   const title=document.createElement('b');title.textContent=correct?'That reasoning fits.':'Reconsider the comparison.';
   const text=document.createElement('span');text.innerHTML=rich(lesson.feedback);
-  feedback.append(title,text);feedback.focus({preventScroll:true});
+  feedback.append(title,text);
+ }
+ $('quiz').addEventListener('change',()=>{
+  $('quiz-feedback').replaceChildren();
+  $('quiz-feedback').classList.remove('incorrect');
+  $('quiz-status').textContent='';
+ });
+ $('quiz').addEventListener('submit',event=>{
+  event.preventDefault();const selected=document.querySelector('input[name=answer]:checked');
+  if(!selected){$('quiz-feedback').textContent='Choose an answer first, then select Check answer.';return}
+  const answer=Number(selected.value),correct=answer===lesson.correct;
+  const saved=put(draftKey('quiz'),JSON.stringify({answer,correct,at:new Date().toISOString()}));
+  $('quiz-status').textContent=saved?'':'This browser could not save this answer.';
+  showAnswer(answer);
+  $('quiz-feedback').focus({preventScroll:true});
  });
  if($('csv-upload')){
   function showInput(){
-   $('input-kind').textContent=csvName===null?'Next run uses invented starter data':`CSV for next run · ${csvName}`;
+   $('input-kind').textContent=csvName===null?'Next run uses invented starter data':`Next run uses ${csvName}`;
   }
   $('csv-upload').addEventListener('change',async()=>{
    const picker=$('csv-upload');
@@ -301,7 +352,7 @@ function initializeLesson(lesson){
     if(file.size>1_000_000)throw new Error('CSV must be 1 MB or smaller.');
     const text=await file.text();if(!text.trim())throw new Error('The file is empty.');
     csv=text;csvName=file.name;
-    $('csv-status').textContent='File ready. Select Run Python to check and analyse it.';
+    $('csv-status').textContent='File selected. Select Run Python to validate and analyse its rows.';
     showInput();
     stale();
    }catch(error){$('csv-status').textContent=error.message+' The previous input is unchanged.'}
@@ -322,7 +373,7 @@ function initializeLesson(lesson){
    $('csv-upload').focus();
   });
   $('export-report').addEventListener('click',()=>{
-   const fields=[['question','Question & useful threshold'],['plan','Prospective experiment plan'],['source','Data source & conditions'],['finding','Finding & uncertainty'],['limits','Limitations & next test']];
+   const fields=[['question','Question & useful threshold'],['plan','Plan before collecting data'],['source','Data source & conditions'],['finding','Finding & uncertainty'],['limits','Limitations & next test']];
    const body=['# Scientific Method Lab · Investigation',`Exported ${new Date().toISOString()}`];
    for(const[id,label]of fields)body.push(`## ${label}\n\n${$('report-'+id).value||'[Not recorded]'}`);
    body.push('## Execution record');
@@ -336,7 +387,7 @@ function initializeLesson(lesson){
    }else body.push('No successful execution was recorded on this page. Worked output is available separately in the lesson.');
    body.push('## Field notes\n\n'+($('notes').value||'[Not recorded]'));
    download('scientific-method-investigation.md',body.join('\n\n')+'\n','text/markdown');
-   $('report-status').textContent='Investigation exported. Save your original data and run JSON alongside it.';
+   $('report-status').textContent='Report downloaded. Keep it with your original data and run JSON.';
   });
  }
  controls(false);

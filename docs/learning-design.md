@@ -112,3 +112,12 @@ threshold before execution, and the exact timing boundary. Its rows describe
 one shared browser session. The capstone distinguishes the built-in example
 from a supplied CSV and exposes file requirements before execution. The report
 keeps the last successful source, input and output available after an error.
+
+## Concrete comparisons
+
+Each published editor prepares one complete example. A visible question gives a
+reason to compare named rows, values or plot features. The result explains what
+the prepared run supports, then the suggested edit names an editable location,
+exact values and the evidence to inspect after the rerun. Original explanations
+stay with original runs. The separate question asks learners to apply the idea
+to fresh evidence.
