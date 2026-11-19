@@ -2,6 +2,39 @@ import katex from './vendor/katex.mjs';
 import {renderRich} from './rich-text.mjs';
 // Copyright © 2026 Christopher Snow
 import {attachEditor} from './editor.mjs';
+
+// Prepare after the first paint, only on visible runnable lessons.
+function schedulePreparation(start){
+ const connection=navigator.connection;
+ if(connection?.saveData||/^(slow-)?[23]g$/.test(connection?.effectiveType||'')||
+    (connection?.downlink>0&&connection.downlink<1.5)||navigator.deviceMemory<=2)return ()=>{};
+ let cancelled=false,scheduled=false,frame,task;
+ const useIdle=typeof requestIdleCallback==='function';
+ function cancel(){
+  cancelled=true;
+  document.removeEventListener('visibilitychange',schedule);
+  cancelAnimationFrame(frame);
+  if(useIdle)cancelIdleCallback(task);else clearTimeout(task);
+ }
+ function schedule(){
+  if(cancelled||scheduled||document.visibilityState!=='visible')return;
+  scheduled=true;
+  frame=requestAnimationFrame(()=>{
+   frame=requestAnimationFrame(()=>{
+    const prepare=()=>{
+     scheduled=false;
+     if(cancelled||document.visibilityState!=='visible')return;
+     cancel();
+     start();
+    };
+    task=useIdle?requestIdleCallback(prepare,{timeout:2000}):setTimeout(prepare,500);
+   });
+  });
+ }
+ document.addEventListener('visibilitychange',schedule);
+ schedule();
+ return cancel;
+}
 const root=new URL('.',import.meta.url);
 const $=id=>document.getElementById(id);
 const prefix='sml:v1:';
@@ -240,8 +273,36 @@ function initializeLesson(lesson){
   if($('clear-csv'))$('clear-csv').disabled=running||readingCsv||csv===null;
   if(returnFocus)$('run').focus({preventScroll:true});
  }
+ let pythonPrepared=false, preparationTimer;
+ function disposePython(){
+  clearTimeout(preparationTimer);
+  worker?.terminate();
+  worker=null;
+  pythonPrepared=false;
+ }
+ function pythonWorker(){
+  return worker ??= new Worker(new URL('worker.js',root));
+ }
+ function preparePython(){
+  if(worker||busy)return;
+  try{
+   const preparing=pythonWorker();
+   const abandon=()=>{if(worker===preparing&&!busy)disposePython()};
+   preparing.onerror=abandon;
+   preparing.onmessage=({data})=>{
+    if(data.type==='prepare-error'){abandon();return}
+    if(data.type==='prepared'){
+     clearTimeout(preparationTimer);
+     pythonPrepared=true;
+    }
+   };
+   preparationTimer=setTimeout(abandon,120000);
+   preparing.postMessage({type:'prepare'});
+  }catch{disposePython()}
+ }
+ const cancelPreparation=schedulePreparation(preparePython);
  function terminate(message){
-  revision++;clearTimeout(timer);worker?.terminate();worker=null;controls(false);$('status').textContent=message;
+  revision++;clearTimeout(timer);disposePython();controls(false);$('status').textContent=message;
   stale();
  }
  function showRunError(message,inputName,stdout=''){
@@ -256,8 +317,14 @@ function initializeLesson(lesson){
   stale();
  }
  $('stop').addEventListener('click',()=>terminate('Stopped. Select Run Python to start a new Python session.'));
+ $('restart-python').addEventListener('click',()=>{
+  cancelPreparation();
+  terminate('Python session reset. Select Run Python to start again.');
+ });
  async function run(){
   if(busy||readingCsv)return;
+  cancelPreparation();
+  clearTimeout(preparationTimer);
   const source=$('code').value,input=csv,inputName=csvName,runRevision=++revision;
   const runWasFocused=document.activeElement===$('run');
   $('editor-tools').open=false;
@@ -265,7 +332,7 @@ function initializeLesson(lesson){
   $('error-details').open=false;
   controls(true);
   if(runWasFocused)$('stop').focus({preventScroll:true});
-  $('status').textContent=worker?'Starting your Python…':'Loading Python and statistics packages. This can take a moment…';
+  $('status').textContent=pythonPrepared?'Starting your Python…':'Loading Python and statistics packages. This can take a moment…';
   stale();
   const fail=message=>{
    if(runRevision!==revision)return;
@@ -273,11 +340,12 @@ function initializeLesson(lesson){
    showRunError(message,inputName);
   };
   timer=setTimeout(()=>fail('Python took more than two minutes to load. Check your connection, then select Run Python again.'),120000);
-  if(!worker){try{worker=new Worker(new URL('worker.js',root))}catch(error){fail(error.message);return}}
+  try{pythonWorker()}catch(error){fail(error.message);return}
   worker.onerror=event=>fail(event.message||'The Python worker could not load.');
   worker.onmessage=({data})=>{
    if(runRevision!==revision)return;
    if(data.type==='running'){
+    pythonPrepared=true;
     clearTimeout(timer);$('status').textContent='Running your Python…';
     timer=setTimeout(()=>fail('Python stopped after 45 seconds. Check for a loop or reduce the work, then select Run Python again.'),45000);return;
    }
@@ -306,10 +374,21 @@ function initializeLesson(lesson){
    $('example-takeaway').hidden=source!==initialCode||input!==null||slug==='collect-a-real-comparison';
    $('run-tools').hidden=false;stale();
   };
-  worker.postMessage({source,csv:input});
+  worker.postMessage({type:'run',source,csv:input});
  }
  $('run').addEventListener('click',run);
- window.addEventListener('pagehide',()=>{clearTimeout(timer);worker?.terminate();clearPlots()});
+ window.addEventListener('pagehide',event=>{
+  cancelPreparation();
+  revision++;
+  clearTimeout(timer);
+  disposePython();
+  if(busy){
+   controls(false);
+   $('status').textContent='Select Run Python to start again.';
+   stale();
+  }
+  if(!event.persisted)clearPlots();
+ });
  let quizAttempt=null;
  try{quizAttempt=JSON.parse(initialQuiz)}catch{}
  if(quizAttempt&&Number.isInteger(quizAttempt.answer)&&quizAttempt.answer>=0&&quizAttempt.answer<lesson.options.length){

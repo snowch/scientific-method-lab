@@ -24,7 +24,7 @@ def get(name):
     return {'name':name,'version':meta['version'],'file':meta['file_name'],'sha256':meta['sha256'],'source':base+meta['file_name']}
 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
     manifest=list(pool.map(get,sorted(needed)))
-dest=root/'dist/engine'; dest.mkdir(parents=True,exist_ok=True)
+dest=root/'dist/engine'/lock['info']['version']; dest.mkdir(parents=True,exist_ok=True)
 for file in engine.iterdir():
     if file.is_file() and file.name not in ['package.json','README.md']:
         shutil.copyfile(file,dest/file.name)

@@ -330,3 +330,27 @@ inspect the intended evidence. No learner study measured understanding.
 The [opening and closing copy audit](copy-audit.md) records the full rubric check
 for all 30 investigations, the shared interface and notes, the literal edits and
 expected evidence, and the distinction between functional and learning evidence.
+
+## Python startup review
+
+Applied the UX and learning-design skills to the existing lesson route. The
+learner predicts, edits and selects Run Python as before. Preparation begins
+after rendering on eligible visible lessons and only loads Python and pinned
+packages. The overview and field notes do not start a Python worker. The
+prepared worker joins the first explicit Run and receives the editor source at
+that click. Only an actual run can produce a result.
+
+Package transfers can overlap Python bootstrap. Wheel versions, build-time
+hash checks and printed evidence are preserved. The worker and its embedded
+helpers share the app build ID. The pinned engine has its own versioned path.
+Existing per-run variables, figure cleanup and reusable imports remain in
+place. Restart Python under the editor tools clears the worker, including
+its virtual files, and keeps the edited source. Slow connections, Save Data,
+small reported device memory and background tabs defer speculative startup.
+
+The browser suite checks the prepared path with denied storage and no idle
+callback, Run during initialization, repeated clicks, fresh user variables,
+restart clearing a virtual file, explicit Run with Save Data, cancellation,
+worker-load failure and manual recovery. The full course checks still compare
+real executions with authored examples and inspect accessible reading and
+recovery. This review covers the implementation and learner controls.

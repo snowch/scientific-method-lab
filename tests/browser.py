@@ -2,6 +2,7 @@
 """Drive real Wasm executions, exports, recovery and responsive reading paths."""
 import contextlib, json, math, os, re, subprocess, sys, time
 from pathlib import Path
+from runtime_startup import check_runtime_startup
 from playwright.sync_api import sync_playwright
 from quiet_checks import check_quiet_layout
 from learner_edits import EDITS
@@ -362,6 +363,7 @@ try:
         assert not any('/engine/' in url for url in requests)
         assert errors==[],errors
         check_quiet_layout(browser,ROOT,BASE,LESSONS)
+        check_runtime_startup(browser, BASE, LESSONS[0]['slug'])
         browser.close()
         print('PASS: 30 real Wasm experiments; native numerical agreement; CSV validation and provenance; feedback; error and Stop recovery; drafts; portable exports; mobile 390/320px; both themes; JavaScript-free reading.',flush=True)
 finally:
