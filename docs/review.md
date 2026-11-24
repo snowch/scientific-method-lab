@@ -354,3 +354,11 @@ restart clearing a virtual file, explicit Run with Save Data, cancellation,
 worker-load failure and manual recovery. The full course checks still compare
 real executions with authored examples and inspect accessible reading and
 recovery. This review covers the implementation and learner controls.
+
+## Offline implementation review
+
+Applied the local UX and learning-design skills. App status is available beside the existing header controls, using a native modal with a dimmed backdrop and keyboard focus return. The primary action follows the state: Save offline copy, Update offline copy, Restart to update or Repair offline copy. Essential status and progress stay visible; version details are optional. Existing models, outcomes, simulated-data labels and prerequisites are preserved.
+
+The complete runtime and all lesson/figure assets are pinned and saved, including responsive images. Saved output remains actual execution evidence; restoration creates fresh blob URLs without running Python. Code, notes, report fields, CSV contents, reading marks, quiz feedback and prior Python errors are kept independently of the downloaded course cache. Infrastructure recovery keeps the last genuine output and saves verified work before reload. Ordinary Python exceptions do not open the file-recovery dialog.
+
+The source work was isolated from pre-existing edits in the original checkout. Its runtime-only fallback correction is included here because offline package loading must not fall through to an external CDN. Existing local document edits remain untouched. Verification commands and limitations are recorded in offline-update-design.md. Functional checks do not demonstrate learning effectiveness.

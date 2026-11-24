@@ -97,3 +97,11 @@ are acknowledged in the course's field notes.
 
 Code: Apache-2.0. Original course content: CC BY-NC 4.0. Third-party packages and
 fonts retain their own licences. See [LICENSE](LICENSE).
+
+## Offline access
+
+Open **App status** and choose **Save offline copy** before disconnecting. Wait for **Downloaded and ready to use offline**. The copy includes the lessons, figures, Python runtime and statistics packages. External references need internet access.
+
+Use **Update offline copy**, then **Restart to update**, to replace it. Open work and genuine results are restored without rerunning code. **Repair offline copy** recovers missing files while online; removing the copy keeps saved learner work. See [the design and verification](docs/offline-update-design.md).
+
+After `npm run check`, run `npm run test:offline` for real cold-offline execution, saved-work recovery, interrupted downloads and guarded updates.

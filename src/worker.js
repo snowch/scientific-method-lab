@@ -15,9 +15,10 @@ plt.rcParams.update({'font.family':'DejaVu Sans','font.size':13,'axes.spines.top
 }
 self.onmessage=async({data})=>{
  if(data.type!=='prepare'&&data.type!=='run')return;
+ let phase='prepare';
  try{
   ready ||= initialize();
-  const py=await ready;
+  const py=await ready;phase='execution';
   if(data.type==='prepare'){
    postMessage({type:'prepared'});
    return;
@@ -44,5 +45,5 @@ _narrow_images = [base64.b64encode(s.encode()).decode() for s in _narrow]
 plt.close('all')
 json.dumps({'stdout': _buffer.getvalue(), 'error': _failure, 'figures': _images, 'figures_narrow': _narrow_images, 'versions': {'python': platform.python_version(), 'pyodide': '0.27.7', 'numpy': numpy.__version__, 'scipy': scipy.__version__, 'pandas': pandas.__version__, 'matplotlib': matplotlib.__version__}})`);
   postMessage({type:'result',value:JSON.parse(value)});
- }catch(error){postMessage({type:data.type==='prepare'?'prepare-error':'error',message:String(error.message||error)})}
+ }catch(error){postMessage({type:data.type==='prepare'?'prepare-error':'error',message:String(error.message||error),category:phase==='prepare'?'asset':'execution'})}
 };
