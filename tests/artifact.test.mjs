@@ -1,5 +1,6 @@
 // Copyright © 2026 Christopher Snow. Exercise the actual publication gate.
 import test from "node:test";
+import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { mkdtemp, writeFile, mkdir, readFile, rm, cp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -28,6 +29,19 @@ test("publishing markers are excluded; missing or corrupted uploaded assets stop
     assert.ok(release.files.some((f) => f.path === ".required-data.txt"));
     await cp(source, artifact, { recursive: true });
     await verifyOfflineBuild(artifact);
+    await assert.rejects(
+      verifyOfflineBuild(artifact, "b".repeat(40)),
+      /commit/,
+    );
+    assert.throws(
+      () =>
+        execFileSync(
+          process.execPath,
+          ["scripts/verify-offline-build.mjs", artifact, "b".repeat(40)],
+          { stdio: "pipe" },
+        ),
+      /Command failed/,
+    );
     const file = join(artifact, "releases", release.id, ".required-data.txt");
     await rm(file);
     await assert.rejects(

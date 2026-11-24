@@ -42,11 +42,15 @@ jobs:
           include-hidden-files: true
           path: dist
   publish:
+    concurrency:
+      group: course-publication
+      cancel-in-progress: false
     if: github.event_name != 'pull_request'
     needs: check
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      actions: read
       pages: write
       id-token: write
     environment:
@@ -72,6 +76,13 @@ jobs:
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-${{ github.run_attempt }}
           path: dist
+      - name: Wait for Pages artifact visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/publication.mjs wait github-pages-${{ github.run_attempt }}
       - uses: actions/deploy-pages@v4
         id: deploy
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}

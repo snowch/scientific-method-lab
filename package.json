@@ -7,7 +7,7 @@
     "build": "node scripts/build.mjs",
     "dev": "npm run build && python3 -m http.server 5173 --directory .preview",
     "check": "python3 tests/test_examples.py && npm run build && node tests/links.mjs && python3 tests/browser.py",
-    "test:offline": "node --test tests/offline-contract.test.mjs tests/retention.test.mjs tests/artifact.test.mjs && node tests/offline-browser.cjs && node tests/update-browser.cjs"
+    "test:offline": "node --test tests/offline-contract.test.mjs tests/retention.test.mjs tests/artifact.test.mjs tests/publication.test.mjs && node tests/offline-browser.cjs && node tests/update-browser.cjs"
   },
   "dependencies": {
     "katex": "0.16.22",
