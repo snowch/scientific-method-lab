@@ -121,3 +121,7 @@ the prepared run supports, then the suggested edit names an editable location,
 exact values and the evidence to inspect after the rerun. Original explanations
 stay with original runs. The separate question asks learners to apply the idea
 to fresh evidence.
+
+## Offline access and safe updates
+
+The practical outcome is to save the complete course before losing connectivity, run the existing Python investigations offline and replace the saved release without losing open work. Existing Python/statistics prerequisites and lesson outcomes remain unchanged. The likely misconception is that Up to date online also means downloaded; App status states those facts separately and requires full verification before declaring readiness. A restart restores evidence rather than rerunning an example. These checks verify access and state preservation; they do not measure learning effectiveness.

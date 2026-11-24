@@ -1,3 +1,4 @@
+import {buildOffline} from './offline.mjs';
 // Copyright © 2026 Christopher Snow
 import fs from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -34,7 +35,7 @@ await fs.cp('python','dist/python',{recursive:true});
 await fs.writeFile('dist/worked-environment.json',JSON.stringify(worked.environment,null,2));
 await fs.writeFile('dist/.nojekyll','');
 await fs.writeFile('dist/favicon.svg','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><rect width="36" height="36" rx="10" fill="#315bf6"/><path d="m10 25 8-15 8 15M13 20h10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="10" r="3" fill="#a6c4ff"/></svg>');
-const shell=(title,body,p='')=>`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="description" content="Learn the scientific method through 30 short investigations. Design fair experiments, run real Python statistics in your browser and make claims your evidence can support."><title>${esc(title)} · Scientific Method Lab</title><link rel="icon" href="${p}favicon.svg"><link rel="stylesheet" href="${p}vendor/katex.min.css"><link rel="stylesheet" href="${p}style.${version}.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem('sml:theme')||'light'}catch{}</script><script type="module" src="${p}app.${version}.js"></script></head><body>${header(p)}${body}${footer(p)}</body></html>`;
+const shell=(title,body,p='')=>`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="reading-state-managed" content="true"><link rel="stylesheet" href="${p}app-status.css"><link rel="stylesheet" href="${p}runtime-recovery.css"><meta name="color-scheme" content="light dark"><meta name="description" content="Learn the scientific method through 30 short investigations. Design fair experiments, run real Python statistics in your browser and make claims your evidence can support."><title>${esc(title)} · Scientific Method Lab</title><link rel="icon" href="${p}favicon.svg"><link rel="stylesheet" href="${p}vendor/katex.min.css"><link rel="stylesheet" href="${p}style.${version}.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem('sml:theme')||'light'}catch{}</script><script type="module" src="${p}app.${version}.js"></script></head><body>${header(p)}${body}${footer(p)}</body></html>`;
 await fs.writeFile('dist/index.html',shell('Course overview',renderHome(course)));
 for(const [i,l]of lessons.entries()){
  const code=await fs.readFile('python/'+l.code,'utf8');
@@ -79,6 +80,10 @@ python downloaded-investigation.py</pre><p>For the report example, place your se
 <section id="sources"><h2>Sources and acknowledgements</h2><p>The original examples draw on the author’s Assembly Lab, Event Streaming Lab and Benchmarking Lab. Code is Apache-2.0 and course prose is CC BY-NC 4.0. Third-party packages retain their own licences.</p><ul class="source-list">${[...new Map(lessons.map(l=>[l.source[1],l.source])).values()].map(([title,url])=>`<li><a href="${url}">${title} ↗</a></li>`).join('')}</ul><p>The repository records the source review and functional checks. Learning effectiveness remains unmeasured.</p></section><a class="button primary" href="index.html#course">Back to the investigations</a></main>`;
 await fs.writeFile('dist/field-notes.html',shell('Course notes',notes));
 execFileSync('python3',['scripts/prepare-runtime.py'],{stdio:'inherit'});
+for(const file of ['offline.mjs','release-contract.mjs','release-metadata.mjs','media-range.mjs','experiment-state.mjs','runtime-recovery.mjs','runtime-recovery.css','app-status.css'])await fs.copyFile('src/'+file,'dist/'+file);
+const offlineGit=args=>execFileSync('git',['-c','safe.directory='+process.cwd(),...args],{encoding:'utf8'}).trim();
+const commit=process.env.COURSE_COMMIT||(offlineGit(['status','--porcelain'])?null:offlineGit(['rev-parse','HEAD']));
+await buildOffline('dist',{commit,date:commit?offlineGit(['show','-s','--format=%cs',commit]):null});
 await fs.rm('.preview/scientific-method-lab',{recursive:true,force:true});
 await fs.mkdir('.preview/scientific-method-lab',{recursive:true});
 await fs.cp('dist','.preview/scientific-method-lab',{recursive:true});
