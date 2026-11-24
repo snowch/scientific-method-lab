@@ -1,0 +1,62 @@
+name: Publish a verified course build
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Completed main-branch pages.yml run with a successful check job
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: course-publication
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Require a checked main-branch source build
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run_id }}
+        run: node scripts/publication.mjs source "$SOURCE_RUN"
+      - uses: actions/download-artifact@v5
+        with:
+          name: verified-course
+          path: dist
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify the downloaded publication artifact
+        env:
+          EXPECTED_COMMIT: ${{ steps.source.outputs.commit }}
+        run: node scripts/verify-offline-build.mjs dist "$EXPECTED_COMMIT"
+      - name: Preserve assets for older open lessons
+        env:
+          PUBLISHED_https://snowch.github.io/scientific-method-lab/: https://snowch.github.io/scientific-method-lab/
+        run: node scripts/retain-for-publish.mjs
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages-${{ github.run_attempt }}
+          path: dist
+      - name: Wait for Pages artifact visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/publication.mjs wait github-pages-${{ github.run_attempt }}
+      - uses: actions/deploy-pages@v4
+        id: deploy
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}

@@ -4,10 +4,12 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateRelease } from "../src/release-contract.mjs";
-export async function verifyOfflineBuild(directory) {
+export async function verifyOfflineBuild(directory, expectedCommit) {
   const release = validateRelease(
     JSON.parse(await readFile(directory + "/release.json", "utf8")),
   );
+  if (expectedCommit && release.commit !== expectedCommit)
+    throw Error("Publication source commit does not match the checked run.");
   const pinned = validateRelease(
     JSON.parse(
       await readFile(
@@ -43,7 +45,10 @@ if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const release = await verifyOfflineBuild(process.argv[2] || "dist");
+  const release = await verifyOfflineBuild(
+    process.argv[2] || "dist",
+    process.argv[3],
+  );
   console.log(
     "Verified publication artifact:",
     release.files.length,
