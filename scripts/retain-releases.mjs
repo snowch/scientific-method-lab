@@ -39,6 +39,19 @@ export async function retainPublishedReleases(
       release = validateRelease(await response.json());
       if (release.id !== id) throw Error("Previous release identity mismatch.");
     }
+    // The first Python releases mistakenly required an empty publishing marker.
+    // It is never a learner dependency. Keep every actual asset byte unchanged.
+    release = validateRelease({
+      ...release,
+      files: release.files.filter(
+        (file) =>
+          !(
+            file.path === ".nojekyll" &&
+            file.bytes === 0 &&
+            file.sha256 === createHash("sha256").update("").digest("hex")
+          ),
+      ),
+    });
     const pending = [...release.files];
     const results = await Promise.allSettled(
       Array.from({ length: Math.min(6, pending.length) }, async () => {

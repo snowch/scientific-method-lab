@@ -21,7 +21,7 @@ jobs:
           node-version: 24
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
           cache: pip
       - run: npm ci
       - run: python -m pip install -r requirements.txt
@@ -39,6 +39,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           name: verified-course
+          include-hidden-files: true
           path: dist
   publish:
     if: github.event_name != 'pull_request'
@@ -62,6 +63,8 @@ jobs:
         with:
           name: verified-course
           path: dist
+      - name: Verify the downloaded publication artifact
+        run: node scripts/verify-offline-build.mjs dist
       - name: Preserve assets for older open lessons
         env:
           PUBLISHED_COURSE_URL: https://snowch.github.io/scientific-method-lab/

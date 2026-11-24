@@ -39,3 +39,9 @@ Before publication, discover legacy dependency aliases from published HTML, Java
 The separate small-release fixture checks cancelled/resumed saves, failure without replacing the verified old copy, resumed transfer on reconnection, two-window busy/storage veto and atomic restart. Fixture records check protocol behaviour; they are not claimed as Python execution.
 
 Functional tests and author review do not establish learning effectiveness or physical Android performance.
+
+## Publication artifact closure
+
+Verify the artifact downloaded by the publish job, not only the build directory in the check job. Actions uploads must include hidden files. The publish gate reads both manifests and verifies the presence, length and SHA-256 of every required immutable file before retaining older releases or deploying. Tests deliberately remove and corrupt a required hidden file; both failures must block publication.
+
+`.nojekyll` is a deployment marker, not course content. Keep it outside the offline manifest. The first Python deployment listed the empty marker while Actions omitted hidden files, which prevented completion of a public offline save despite local tests passing. A narrow migration removes only that exact empty marker from retained manifests; every actual lesson/runtime byte still requires its original hash. Public verification must audit the deployed files and perform a fresh-browser save and cold offline run.
