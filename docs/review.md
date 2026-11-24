@@ -16,16 +16,16 @@ not an independent learner study.
 
 ## Decisions and corrections
 
-| Finding | Effect | Correction and evidence |
-| --- | --- | --- |
-| One early question asked about bootstrap before teaching resampling | Unsupported prerequisite in an independent task | Replaced with a new matched-device comparison requiring only the pairing taught there |
-| Session-level example used standard error before the later spread lesson | An unexplained term carried the comparison | Added a local plain-language definition; later lesson develops the formula and distinction from SD |
-| Sample-size planning introduced a t test before the null-model module | The simulation's decision rule lacked preparation | Added explicit null, statistic, two-sided-test and p-value definitions, keeping the later detailed construction |
-| Native Matplotlib 3.8.4 wheels can conflict with NumPy 2 | Build/runtime confusion and possible installation failure | Use native 3.9.4 with NumPy 2.0.2; retain Pyodide's supported patched 3.8.4 and publish each environment |
-| Font self-hosting left a malformed CSS fragment | Root typography and theme variables failed | Removed the fragment; browser computed styles confirm DM Sans and the intended parchment background |
-| Stop left the prior output caption saying a new run was in progress | Cancellation state could mislead about which run produced the visible record | Added an explicit stopped-run provenance caption; next execution remains available |
-| Narrow header retained the Source link through a specificity conflict | Crowded header and unnecessary line wrapping | Increased specificity for the narrow-screen rule |
-| Small metadata labels were difficult to read | Reduced usability of timing and provenance labels | Raised CSS text sizes below 11px to 11px; code output remains contained and scrollable |
+| Finding                                                                  | Effect                                                                       | Correction and evidence                                                                                         |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| One early question asked about bootstrap before teaching resampling      | Unsupported prerequisite in an independent task                              | Replaced with a new matched-device comparison requiring only the pairing taught there                           |
+| Session-level example used standard error before the later spread lesson | An unexplained term carried the comparison                                   | Added a local plain-language definition; later lesson develops the formula and distinction from SD              |
+| Sample-size planning introduced a t test before the null-model module    | The simulation's decision rule lacked preparation                            | Added explicit null, statistic, two-sided-test and p-value definitions, keeping the later detailed construction |
+| Native Matplotlib 3.8.4 wheels can conflict with NumPy 2                 | Build/runtime confusion and possible installation failure                    | Use native 3.9.4 with NumPy 2.0.2; retain Pyodide's supported patched 3.8.4 and publish each environment        |
+| Font self-hosting left a malformed CSS fragment                          | Root typography and theme variables failed                                   | Removed the fragment; browser computed styles confirm DM Sans and the intended parchment background             |
+| Stop left the prior output caption saying a new run was in progress      | Cancellation state could mislead about which run produced the visible record | Added an explicit stopped-run provenance caption; next execution remains available                              |
+| Narrow header retained the Source link through a specificity conflict    | Crowded header and unnecessary line wrapping                                 | Increased specificity for the narrow-screen rule                                                                |
+| Small metadata labels were difficult to read                             | Reduced usability of timing and provenance labels                            | Raised CSS text sizes below 11px to 11px; code output remains contained and scrollable                          |
 
 The visual direction uses parchment, forest green, a muted copper accent,
 Literata headings and DM Sans text. Fonts and licences are self-hosted. The
@@ -194,7 +194,6 @@ check 200% text-size reflow for the overview, a lesson and field notes at 1440px
 390px and 320px. Code/gutter line heights remain equal. Screenshots from the
 focused review are under ignored `test-results/readability/`.
 
-
 ## 2026-11-13 — visual clutter review
 
 Prompted by the user's tablet screenshots and concern that the UI is noisy. Reviewed the live overview plus first, middle and capstone lessons at 390px, 820px and 1440px. This is a design review; it makes no frontend or deployment change. Browser observations and screenshots are held in the workspace's `scratch/course-ui-review/` directory.
@@ -214,7 +213,6 @@ Course-specific findings: The supplied screenshots match the shared-template pro
 Proposed default sequence: compact course context; title and one goal; explanation; prediction and experiment; actual results when present; one practice question; next lesson. Optional help belongs beside the relevant activity. Scientific Method Lab is the appropriate reference for a later shared-template simplification, followed by Monte Carlo Lab and SymPy Lab.
 
 Evidence gap: this is a screenshot/live-browser and author review, not an observed learner study. The user's screenshots provide real qualitative evidence that the existing visual hierarchy is distracting. A revised design should be checked at tablet widths as well as the existing phone and desktop widths, including before-run, running, error and completed-result states.
-
 
 ## 2026-11-13 — quiet interface implementation
 
@@ -362,3 +360,5 @@ Applied the local UX and learning-design skills. App status is available beside 
 The complete runtime and all lesson/figure assets are pinned and saved, including responsive images. Saved output remains actual execution evidence; restoration creates fresh blob URLs without running Python. Code, notes, report fields, CSV contents, reading marks, quiz feedback and prior Python errors are kept independently of the downloaded course cache. Infrastructure recovery keeps the last genuine output and saves verified work before reload. Ordinary Python exceptions do not open the file-recovery dialog.
 
 The source work was isolated from pre-existing edits in the original checkout. Its runtime-only fallback correction is included here because offline package loading must not fall through to an external CDN. Existing local document edits remain untouched. Verification commands and limitations are recorded in offline-update-design.md. Functional checks do not demonstrate learning effectiveness.
+
+Publication review: a real public asset audit identified a required empty `.nojekyll` marker omitted by Actions. The fix excludes that deployment-only marker, preserves hidden upload files and verifies the downloaded publication artifact. Regression tests cover a missing or corrupted hidden dependency and retention of the earlier marker-affected release. This addresses the build-to-deployment gap; it does not change lesson models or prerequisites.
