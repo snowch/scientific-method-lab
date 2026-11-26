@@ -129,6 +129,8 @@ const { chromium, expect } = require("playwright/test"),
       "Downloaded and ready to use offline",
       { timeout: 180000 },
     );
+    await expect(p.locator("#app-status-open [data-badge='saved']")).toBeVisible();
+    await expect(p.locator("#app-status-open")).toHaveAccessibleDescription(/Downloaded and ready to use offline/);
     await context.close();
     context = null;
     server.closeAllConnections();

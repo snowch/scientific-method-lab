@@ -80,7 +80,7 @@ python downloaded-investigation.py</pre><p>For the report example, place your se
 <section id="sources"><h2>Sources and acknowledgements</h2><p>The original examples draw on the author’s Assembly Lab, Event Streaming Lab and Benchmarking Lab. Code is Apache-2.0 and course prose is CC BY-NC 4.0. Third-party packages retain their own licences.</p><ul class="source-list">${[...new Map(lessons.map(l=>[l.source[1],l.source])).values()].map(([title,url])=>`<li><a href="${url}">${title} ↗</a></li>`).join('')}</ul><p>The repository records the source review and functional checks. Learning effectiveness remains unmeasured.</p></section><a class="button primary" href="index.html#course">Back to the investigations</a></main>`;
 await fs.writeFile('dist/field-notes.html',shell('Course notes',notes));
 execFileSync('python3',['scripts/prepare-runtime.py'],{stdio:'inherit'});
-for(const file of ['offline.mjs','release-contract.mjs','release-metadata.mjs','media-range.mjs','experiment-state.mjs','runtime-recovery.mjs','runtime-recovery.css','app-status.css'])await fs.copyFile('src/'+file,'dist/'+file);
+for(const file of ['offline.mjs','header-controls.mjs','header-controls.LICENSE.txt','release-contract.mjs','release-metadata.mjs','media-range.mjs','experiment-state.mjs','runtime-recovery.mjs','runtime-recovery.css','app-status.css'])await fs.copyFile('src/'+file,'dist/'+file);
 const offlineGit=args=>execFileSync('git',['-c','safe.directory='+process.cwd(),...args],{encoding:'utf8'}).trim();
 const commit=process.env.COURSE_COMMIT||(offlineGit(['status','--porcelain'])?null:offlineGit(['rev-parse','HEAD']));
 await buildOffline('dist',{commit,date:commit?offlineGit(['show','-s','--format=%cs',commit]):null});
