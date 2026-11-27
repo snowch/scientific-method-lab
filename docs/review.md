@@ -380,3 +380,7 @@ The shared [course design guide](https://github.com/snowch/cuda-python-lab/blob/
 records this rule. Validation covers the built header at 320, 390, 820 and 1440px
 in both themes, keyboard focus, modal opening/Escape, persistence and project-local
 asset requests. Functional checks do not establish learning effectiveness.
+
+## 2026-11-27 — course audit: problem-first flow
+
+Reviewed the thirty lesson definitions, all example scripts and the shared renderer at commit 485c3e62650a3086d7dac00b5a7420d013888268. Implemented problem-first openings, prediction before reference explanation, and lesson conclusions for every lesson; expanded lessons 1–3 with plain-English reasoning, separate model versus measurement tasks, and fair-test design before the deliberately invalid data edit. Previewed SE in lesson 9 and hypothesis testing in lesson 20; made BCa an optional extension in lesson 18. Added content-contract and browser layout/order assertions. Existing Python source and public lesson slugs are preserved. The authoring changes have not been executed in native Python or browser in this editing environment: CI must run `npm run check` and offline regression checks before treating the change as verified. No novice usability study has been conducted. Remaining audit work includes earlier real measurement, visual parameter controls, course-order changes, feedback and capstone improvements.

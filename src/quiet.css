@@ -139,3 +139,8 @@
 #code,#report{scroll-margin-top:8px}
 @media(max-width:700px){.lab-workspace>.observation{padding:0 14px}}
 @media(max-width:370px){#code,#report{scroll-margin-top:42px}}
+
+/* Learning flow: an opening problem and prediction precede the explanation. */
+.intro-task,.lesson-synthesis{max-width:68ch;margin:24px 0;padding:0;font-size:var(--type-reading);line-height:1.75}
+.intro-task details{margin:8px 0 24px}.intro-task summary{min-height:44px;padding:8px 0;cursor:pointer}.intro-task details p{margin:8px 0 0}
+.lesson-synthesis{border-top:1px solid var(--line);padding-top:24px}.lesson-synthesis h2,.lesson-synthesis h3{font-family:inherit;font-weight:600;font-size:1.125rem;line-height:1.6;margin:16px 0 6px}.lesson-synthesis p{margin:0 0 16px}

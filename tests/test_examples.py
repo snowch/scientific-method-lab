@@ -76,6 +76,8 @@ class CourseTests(unittest.TestCase):
             self.assertGreaterEqual(len(l['explain']),3)
             self.assertEqual(len(l['hints']),2)
             self.assertTrue(l['goal'] and l['limit'] and l['kind'])
+            self.assertTrue(l['principle'] and l['nextQuestion'])
+            self.assertGreaterEqual(len(l['explain']),4)
         for m in range(6):self.assertEqual(sum(l['module']==m for l in LESSONS),5)
     def run_capstone(self,text):
         prior=os.getcwd()

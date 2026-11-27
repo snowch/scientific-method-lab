@@ -15,6 +15,14 @@ def check_quiet_layout(browser,root,base,lessons):
             assert not page.locator('#stop').is_visible()
             assert not page.locator('#export-run').is_visible()
             assert not page.locator('#prediction').is_visible()
+            assert page.locator('.lesson-synthesis').is_visible()
+            assert page.locator('.lesson-synthesis').inner_text().find(lesson['principle'])>=0
+            assert page.locator('.prediction').evaluate("e=>Boolean(e.compareDocumentPosition(document.querySelector('.concept-figure')) & Node.DOCUMENT_POSITION_FOLLOWING)")
+            if lesson.get('introTask'):
+                task=page.locator('.intro-task details')
+                assert not task.evaluate('e=>e.open')
+                task.locator('summary').click();assert task.evaluate('e=>e.open')
+                task.locator('summary').click();assert not task.evaluate('e=>e.open')
             assert not page.locator('#notes').is_visible()
             assert not page.locator('#restore').is_visible()
             assert page.locator('.data-kind').inner_text().strip()
