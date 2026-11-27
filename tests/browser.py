@@ -119,7 +119,14 @@ try:
             if i==0:
                 assert page.locator('#plots img').count()==1
                 assert page.locator('.concept-figure').is_visible()
-                assert page.locator('.explanation .katex').count()>=3
+                # The revised beginner explanation uses one explicit inline equation
+                # rather than typesetting standalone A and B labels as mathematics.
+                # Check its actual TeX and the separate reference equation, not an
+                # incidental count of mathematical fragments in the prose.
+                inline_math=page.locator('.explanation > p .katex annotation[encoding="application/x-tex"]')
+                assert inline_math.all_text_contents()==['100(A-B)/A']
+                assert page.locator('.concept-figure .math-display .katex').count()>=1
+                assert page.locator('.explanation .katex-error').count()==0
                 assert page.locator('.lab-workspace .worked').count()==1
                 assert page.locator('#plots a').get_attribute('href').startswith('blob:')
                 page.screenshot(path=str(RESULTS/'lesson-desktop.png'),full_page=True)
